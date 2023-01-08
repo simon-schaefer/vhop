@@ -1,0 +1,10 @@
+# IDE
+.idea/
+
+# data directory
+data/smpl_csv/
+data/*.npz
+
+# build directory
+cmake-build-debug/
+cmake-build-release/
