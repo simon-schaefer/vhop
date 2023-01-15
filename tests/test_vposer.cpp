@@ -4,16 +4,15 @@
 
 #include "vposer/VPoser.h"
 #include "vposer/LeakyRelu.h"
-#include "vposer/FileUtils.h"
+#include "vhop/utility.h"
 
 
 TEST(TestVPoser, TestLinearLayer){
     // Linear Layer
     // Input [0.4454, 0.8607, 0.2194, 0.6060, 0.6443]
     // Output [ 0.0576, -0.2601,  0.7225,  0.4670, -0.0571,  0.3613, -0.6810, -0.9362, 0.7772, -0.0737]
-
     Eigen::MatrixXd input = Eigen::MatrixXd::Random(1,5);
-    input(0,0) = 0.4454; input(0,1) =  0.8607; input(0,2) = 0.2194; input(0,3) =  0.6060; input(0,4) =  0.6443;
+    input << 0.4454, 0.8607, 0.2194, 0.6060, 0.6443;
     Linear l1 = Linear(5, 10);
     std::string weightPath = "../data/vposer/test_weights/linear";
     l1.loadParams(weightPath);

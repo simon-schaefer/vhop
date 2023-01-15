@@ -23,7 +23,6 @@ add_library(${PROJECT_NAME}
     src/utility.cpp
     src/smpl_model.cpp
     src/vposer/BatchNorm.cpp
-    src/vposer/FileUtils.cpp
     src/vposer/LatentDist.cpp
     src/vposer/LeakyRelu.cpp
     src/vposer/Linear.cpp

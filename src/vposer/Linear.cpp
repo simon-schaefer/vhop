@@ -1,6 +1,6 @@
 #include <iostream>
 #include "vposer/Linear.h"
-#include "vposer/FileUtils.h"
+#include "vhop/utility.h"
 
 
 Linear::Linear(int inputFeatNum, int outFeatNum) {

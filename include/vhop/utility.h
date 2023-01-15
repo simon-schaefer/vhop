@@ -23,6 +23,23 @@ Eigen::MatrixXd loadDoubleMatrix3D(const cnpy::NpyArray &raw, int r, int c, int 
 Eigen::MatrixXd loadDoubleMatrix(const cnpy::NpyArray &raw, int r, int c);
 
 /**
+ * @brief Load a double matrix from a text file.
+ * @param filePath Path to the text file.
+ * @param row Number of rows.
+ * @param col Number of columns.
+ * @return The loaded array.
+ */
+Eigen::MatrixXd loadDoubleMatrix(const std::string& filePath, int row, int col);
+
+/**
+ * @brief Load a double vector from a text file.
+ * @param filePath Path to the text file.
+ * @param row Number of rows.
+ * @return The loaded array.
+ */
+Eigen::VectorXd loadVector(const std::string& filePath, int row);
+
+/**
  * @brief Rodrigues' formula for rotation matrix from axis-angle representation.
  * @param r anlge-axis representation of a rotation.
  */
