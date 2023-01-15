@@ -2,6 +2,7 @@
 #include "include/VPoser.h"
 #include "include/LeakyRelu.h"
 #include "include/FileUtils.h"
+#include "include/Transformations.h"
 #include <fstream>
 
 
@@ -41,11 +42,17 @@ void testLayerImplementations(){
 
 int main() {
 
+
     std::string mainFilePath = "C:\\Users\\Burak\\Desktop\\Burak\\Projects\\vhop\\data\\weights\\";
 
     VPoser vposer = VPoser(mainFilePath, 512, 32);
     vposer.printModel();
     vposer.loadParams();
+
+
+    Eigen::MatrixXd decoder_sampled_input = vhop::utility::loadDoubleMatrix("C:\\Users\\Burak\\Exercises\\FinalProject\\vhop\\vposer\\data\\decoder_testing\\sampled.txt", 500, 32);
+    vposer.decode(decoder_sampled_input);
+
 
     Eigen::MatrixXd sample_input = vhop::utility::loadDoubleMatrix("C:\\Users\\Burak\\Exercises\\FinalProject\\vhop\\vposer\\data\\sample_input\\amass_body_input.txt", 500, 63);
     vposer.forward(sample_input);

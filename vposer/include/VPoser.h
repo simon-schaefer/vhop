@@ -14,7 +14,9 @@ public:
     void forward(Eigen::MatrixXd input);
     LatentDist encode(Eigen::MatrixXd input);
     Eigen::MatrixXd decode(Eigen::MatrixXd input);
-    void postProcess(Eigen::MatrixXd decoderOut);
+    std::vector<Eigen::MatrixXd> postProcess(Eigen::MatrixXd decoderOut);
+    Eigen::Vector3d matrot2aa(Eigen::MatrixXd decoderOut);
+
 
 private:
 

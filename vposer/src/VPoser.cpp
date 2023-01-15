@@ -8,6 +8,8 @@
 #include "../include/VPoser.h"
 #include "../include/LeakyRelu.h"
 #include "../include/BatchNorm.h"
+#include "../include/Transformations.h"
+#include <Eigen/Core>
 
 class SoftplusFunctor {
 public:
@@ -92,7 +94,6 @@ void VPoser::forward(Eigen::MatrixXd input) {
 
     Eigen::MatrixXd decoderOut = decode(latentSample);
 
-    postProcess(decoderOut);
 }
 
 LatentDist VPoser::encode(Eigen::MatrixXd input) {
@@ -110,19 +111,49 @@ LatentDist VPoser::encode(Eigen::MatrixXd input) {
     return LatentDist(mu_out, sigma);
 }
 
-Eigen::MatrixXd  VPoser::decode(Eigen::MatrixXd input) {
+Eigen::MatrixXd VPoser::decode(Eigen::MatrixXd input) {
 
     Eigen::MatrixXd x = input;
+    int n_samples = input.rows();
 
     for(int i = 0; i < decoder_layers.size(); i++){
         x = decoder_layers[i]->forward(x);
     }
-    postProcess(x);
+
+    std::vector<Eigen::MatrixXd> sampleOuts =  postProcess(x);
+
+
+    int remaining_dim = sampleOuts.size() / n_samples;
+    std::vector<Eigen::MatrixXd> sampleMatrots;
+
+    std::vector<Eigen::MatrixXd> poseBodyMatrot;
+    std::vector<Eigen::MatrixXd> poseBody;
+
+    for(int i = 0; i < n_samples; i++){
+
+        Eigen::MatrixXd curPoseBody = Eigen::MatrixXd::Zero(remaining_dim, 3);
+        Eigen::MatrixXd curPoseBodyMatrot = Eigen::MatrixXd::Zero(remaining_dim, 9);
+
+        for(int j = 0; j < remaining_dim; j++){
+
+            Eigen::Vector3d angleRes = matrot2aa(sampleOuts[i*remaining_dim+j]);
+            curPoseBody.row(j) = angleRes;
+
+            for (int k =0 ; k < 3 ; k++){
+                for(int kk =0; kk < 3; kk++){
+                    curPoseBodyMatrot(j,k*3+kk) = sampleOuts[i*remaining_dim+j](k,kk);
+                }
+            }
+        }
+        poseBody.push_back(curPoseBody);
+        poseBodyMatrot.push_back(curPoseBodyMatrot);
+    }
+
     return x;
 }
 
 // Code for ContinousRotReprDecoder
-void VPoser::postProcess(Eigen::MatrixXd decoderOut) {
+std::vector<Eigen::MatrixXd> VPoser::postProcess(Eigen::MatrixXd decoderOut) {
 
     // Calculate the dimensions that we will have after view
     int n_samples  = decoderOut.rows();
@@ -163,6 +194,32 @@ void VPoser::postProcess(Eigen::MatrixXd decoderOut) {
     for (int i = 0; i < b1.rows(); ++i) {
         b3.row(i) = b1.row(i).cross(b2.row(i));
     }
+
     // torch.stack([b1, b2, b3], dim=-1)
     // Not implemented
+    std::vector<Eigen::MatrixXd> out;
+    // Create N, 3x3 matrices
+    for(int i =0; i < b1.rows(); i++){
+        // The original code only stacks 3x3 matrices but in post process stage adds a column of zereos
+        // In this implementation this padding is also handled here
+        Eigen::MatrixXd current = Eigen::MatrixXd::Zero(3, 4);
+        current(0, 0) = b1(i, 0);
+        current(1, 0) = b1(i, 1);
+        current(2, 0) = b1(i, 2);
+
+        current(0, 1) = b2(i, 0);
+        current(1, 1) = b2(i, 1);
+        current(2, 1) = b2(i, 2);
+
+        current(0, 2) = b3(i, 0);
+        current(1, 2) = b3(i, 1);
+        current(2, 2) = b3(i, 2);
+        out.push_back(current);
+    }
+    return out;
 }
+
+Eigen::Vector3d VPoser::matrot2aa(Eigen::MatrixXd decoderOut) {
+    return vhop::transformations::rotationMatrix2Angle(decoderOut);
+}
+
