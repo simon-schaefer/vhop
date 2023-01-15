@@ -1,12 +1,9 @@
-//
-// Created by Burak on 9.01.2023.
-//
-
-
 #include <Eigen/Dense>
 #include <fstream>
 #include <iostream>
-#include "../include/FileUtils.h"
+
+#include "vposer/FileUtils.h"
+
 
 Eigen::VectorXd vhop::utility::loadVector(const std::string weightFilePath, int row){
     std::ifstream fin(weightFilePath);
@@ -23,10 +20,9 @@ Eigen::VectorXd vhop::utility::loadVector(const std::string weightFilePath, int 
     size_t pos;
 
     int vector_dim = stoi(line);
-    std::cout << "Reading a vector with " <<  vector_dim << " dimension" << std::endl;
+    // std::cout << "Reading a vector with " <<  vector_dim << " dimension" << std::endl;
 
     Eigen::MatrixXd out = Eigen::VectorXd::Zero(vector_dim);
-
     while (getline(fin, line)) {
         std::string token;
         while((pos = line.find('\t')) != std::string::npos){
@@ -69,10 +65,9 @@ Eigen::MatrixXd vhop::utility::loadDoubleMatrix(const std::string weightFilePath
     int dim1 = std::stoi(str_dim1);
     std::string str_dim2 = line.substr(pos+1);
     int dim2 = std::stoi(str_dim2);
-    std::cout << "Reading a vector with the dimension(" <<  dim1 << ", "<< dim2 << ")" << std::endl;
+    // std::cout << "Reading a vector with the dimension(" <<  dim1 << ", "<< dim2 << ")" << std::endl;
 
     Eigen::MatrixXd out = Eigen::MatrixXd::Zero(dim1, dim2);
-
     while (getline(fin, line)) {
         std::string token;
         while((pos = line.find('\t')) != std::string::npos){

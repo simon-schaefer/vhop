@@ -22,6 +22,12 @@ include_directories(include)
 add_library(${PROJECT_NAME}
     src/utility.cpp
     src/smpl_model.cpp
+    src/vposer/BatchNorm.cpp
+    src/vposer/FileUtils.cpp
+    src/vposer/LatentDist.cpp
+    src/vposer/LeakyRelu.cpp
+    src/vposer/Linear.cpp
+    src/vposer/VPoser.cpp
     ${CNPY_SOURCES}
 )
 target_link_libraries(${PROJECT_NAME}
@@ -41,3 +47,7 @@ add_test(vhop_test_utility test_utility)
 add_executable(vhop_test_smpl tests/test_smpl_model.cpp)
 target_link_libraries(vhop_test_smpl ${PROJECT_NAME} GTest::gtest GTest::gtest_main ${DEPENDENCIES})
 add_test(vhop_test_smpl test_smpl)
+
+add_executable(vhop_test_vposer tests/test_vposer.cpp)
+target_link_libraries(vhop_test_vposer ${PROJECT_NAME} GTest::gtest GTest::gtest_main ${DEPENDENCIES})
+add_test(vhop_test_vposer test_vposer)

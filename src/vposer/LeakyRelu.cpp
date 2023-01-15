@@ -1,10 +1,7 @@
-//
-// Created by Burak on 9.01.2023.
-//
-
 #include <Eigen/Dense>
 #include <iostream>
-#include "../include/LeakyRelu.h"
+#include "vposer/LeakyRelu.h"
+
 
 LeakyRelu::LeakyRelu() {
     mAlpha = 0.01;

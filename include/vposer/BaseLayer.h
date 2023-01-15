@@ -1,7 +1,3 @@
-//
-// Created by Burak on 9.01.2023.
-//
-
 #ifndef VHOP_BASELAYER_H
 #define VHOP_BASELAYER_H
 #include <Eigen/Dense>

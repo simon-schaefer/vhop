@@ -1,13 +1,10 @@
-//
-// Created by Burak on 9.01.2023.
-//
-
-
 #include <iostream>
-#include "../include/Linear.h"
-#include "../include/VPoser.h"
-#include "../include/LeakyRelu.h"
-#include "../include/BatchNorm.h"
+
+#include "vposer/Linear.h"
+#include "vposer/LeakyRelu.h"
+#include "vposer/BatchNorm.h"
+#include "vposer/VPoser.h"
+
 
 class SoftplusFunctor {
 public:

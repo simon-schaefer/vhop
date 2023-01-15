@@ -1,7 +1,3 @@
-//
-// Created by Burak on 9.01.2023.
-//
-
 #ifndef VHOP_LEAKYRELU_H
 #define VHOP_LEAKYRELU_H
 

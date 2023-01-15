@@ -1,10 +1,5 @@
-//
-// Created by Burak on 10.01.2023.
-//
-
-
 #include <Eigen/Dense>
-#include "../include/LatentDist.h"
+#include "vposer/LatentDist.h"
 
 LatentDist::LatentDist(Eigen::MatrixXd mu, Eigen::MatrixXd sigma){
 

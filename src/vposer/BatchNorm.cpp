@@ -1,7 +1,6 @@
-
 #include <iostream>
-#include "../include/BatchNorm.h"
-#include "../include/FileUtils.h"
+#include "vposer/BatchNorm.h"
+#include "vposer/FileUtils.h"
 
 
 BatchNorm::BatchNorm(int num_features) {

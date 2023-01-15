@@ -1,7 +1,3 @@
-//
-// Created by Burak on 10.01.2023.
-//
-
 #ifndef VHOP_LATENTDIST_H
 #define VHOP_LATENTDIST_H
 
