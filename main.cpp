@@ -1,23 +1,41 @@
-#include <Eigen/Dense>
-#include <iostream>
-
-#include "vhop/utility.h"
-#include "vhop/smpl_model.h"
+#include "ceres/ceres.h"
+#include <Eigen/Core>
 
 
-int main() {
-//    const std::string betasFile = "/Users/sele/vhop/data/test/betas.csv";
-//    const std::string thetasFile = "/Users/sele/vhop/data/test/thetas.csv";
-//    const std::string translationFile = "/Users/sele/vhop/data/test/translation.csv";
-//
-//    vhop::SMPLModel smplModel("/Users/sele/vhop/data/smpl_csv/");
-//    Eigen::MatrixXd betas = vhop::readEigenMatrixFromCSV(betasFile, 10, 1);
-//    Eigen::MatrixXd thetas = vhop::readEigenMatrixFromCSV(thetasFile, 72, 1);
-//    Eigen::MatrixXd translation = vhop::readEigenMatrixFromCSV(translationFile, 3, 1);
-//
-//    Eigen::MatrixXd vertices = Eigen::MatrixXd::Zero(6890, 3);
-//    Eigen::Matrix<double, 24, 3> joints;
-//    smplModel.lbs(betas, thetas, vertices, joints);
+class ReprojectionError {
+ public:
+  ReprojectionError() = default;
+
+  template <typename T>
+  bool operator()(const T* input_point, T* reprojection_error) const {
+      Eigen::Matrix<T, 1, 4> point;
+      point << input_point[0], input_point[1], input_point[2], 1.0;
+      reprojection_error[0] = point.squaredNorm();
+      return true;
+  }
+};
+
+
+
+int main(int argc, char** argv)
+{
+    Eigen::Vector4d point(1, 1, 1, 1);
+
+    ceres::Problem problem;
+    problem.AddResidualBlock(
+        new ceres::AutoDiffCostFunction<ReprojectionError, 1, 4>(
+            new ReprojectionError()
+        ),
+        nullptr, point.data()
+    );
+
+    ceres::Solver::Options options;
+    options.max_num_iterations = 10;
+    options.minimizer_progress_to_stdout = true;
+    ceres::Solver::Summary summary;
+    ceres::Solve(options, &problem, &summary);
+
+    std::cout << summary.BriefReport() << std::endl;
 
     return 0;
 }

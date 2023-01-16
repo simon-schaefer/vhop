@@ -31,16 +31,15 @@ TEST(SMPLModelTest, TestModelLoading) {
 TEST(SMPLModelTest, TestForward) {
     TestSMPL model("../data/smpl_neutral.npz");
     cnpy::npz_t npz = cnpy::npz_load("../data/test/smpl_forward.npz");
-    cnpy::npz_t npzLBS = cnpy::npz_load("../data/test/smpl_lbs.npz");
 
     beta_t betas = vhop::utility::loadDoubleMatrix(npz.at("betas"), SHAPE_BASIS_DIM, 1);
     theta_t thetas = vhop::utility::loadDoubleMatrix(npz.at("thetas"), JOINT_NUM * 3, 1);
     translation_t translation = vhop::utility::loadDoubleMatrix(npz.at("t"), 3, 1);
-
     joint_t joints;
     vertex_t vertices;
     model.Forward(betas, thetas, translation, &joints, &vertices);
 
+//    cnpy::npz_t npzLBS = cnpy::npz_load("../data/test/smpl_lbs.npz");
 //    Eigen::MatrixXd verticesExpected = vhop::utility::loadDoubleMatrix(npz.at("vertices"), 6890, 3);
 //    Eigen::Matrix<double, 24, 3> jointsExpected = vhop::utility::loadDoubleMatrix(npz.at("joints"), 24, 3);
 //    EXPECT_TRUE(vertices.isApprox(verticesExpected, 0.001));

@@ -7,6 +7,9 @@ set(Eigen3_DIR ${LIBRARY_DIR}/Eigen/share/eigen3/cmake CACHE PATH "Path to insta
 find_package(Eigen3 REQUIRED)
 include_directories( SYSTEM ${EIGEN3_INCLUDE_DIRS} )
 
+# Package - Ceres
+find_package(Ceres REQUIRED)
+
 # Package - cnpy
 set( CNPY_SOURCES ${PROJECT_SOURCE_DIR}/thirdparty/cnpy/cnpy.cpp )
 include_directories( SYSTEM ${PROJECT_SOURCE_DIR}/thirdparty/cnpy)
@@ -32,10 +35,11 @@ add_library(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
    Eigen3::Eigen
    ZLIB::ZLIB
+   ${CERES_LIBRARIES}
 )
 
 add_executable(vhop_main main.cpp)
-target_link_libraries(vhop_main ${PROJECT_NAME})
+target_link_libraries(vhop_main ${PROJECT_NAME} ${DEPENDENCIES})
 
 # Testing with google tests.
 enable_testing()
