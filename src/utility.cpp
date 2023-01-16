@@ -138,3 +138,13 @@ Eigen::Matrix<double, 3, 3> vhop::utility::rodriguesMatrix(const Eigen::Vector3d
     }
     return R;
 }
+
+
+Eigen::Matrix<double, Eigen::Dynamic, 2> vhop::utility::project(const Eigen::Matrix<double, Eigen::Dynamic, 3>& p, const Eigen::Matrix3d& K) {
+    Eigen::Matrix<double, Eigen::Dynamic, 2> p2d(p.rows(), 2);
+    for (int i = 0; i < p.rows(); i++) {
+        p2d(i, 0) = p(i, 0) * K(0, 0) / p(i, 2) + K(0, 2);
+        p2d(i, 1) = p(i, 1) * K(1, 1) / p(i, 2) + K(1, 2);
+    }
+    return p2d;
+}

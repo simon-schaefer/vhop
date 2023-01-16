@@ -3,9 +3,12 @@ project(vhop)
 set(CMAKE_CXX_STANDARD 20)
 
 # Package - Eigen
-set(Eigen3_DIR ${LIBRARY_DIR}/Eigen/share/eigen3/cmake CACHE PATH "Path to installed Eigen")
-find_package(Eigen3 REQUIRED)
-include_directories( SYSTEM ${EIGEN3_INCLUDE_DIRS} )
+set(USE_SYSTEM_EIGEN ON CACHE BOOL "Use system Eigen")
+if (USE_SYSTEM_EIGEN)
+    find_package(Eigen3 REQUIRED)
+else()
+    add_subdirectory(${PROJECT_SOURCE_DIR}/thirdparty/eigen-3.4.0)
+endif ()
 
 # Package - Ceres
 find_package(Ceres REQUIRED)
@@ -38,7 +41,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 add_executable(vhop_main main.cpp)
-target_link_libraries(vhop_main ${PROJECT_NAME} ${DEPENDENCIES})
+target_link_libraries(vhop_main ${PROJECT_NAME} ${DEPENDENCIES} ${CERES_LIBRARIES})
 
 # Testing with google tests.
 enable_testing()

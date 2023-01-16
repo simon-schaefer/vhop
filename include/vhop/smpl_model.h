@@ -41,17 +41,46 @@ class SMPL {
   explicit SMPL(const std::string &path);
   ~SMPL();
 
+  /**
+   * @brief Forward kinematics of SMPL model.
+   * @param betas: shape parameters, (10, 1).
+   * @param theta: pose parameters, (72, 1).
+   * @param joints: output joints, (24 * 3, 1).
+   * @param vertices: output extra joints, (21 * 3, 3).
+   */
   template<typename T>
   bool Forward(const beta_t<double> & beta,
                const theta_t<T>& theta,
                joint_t<T>* joints,
                vertex_t<T>* vertices) const;
+
+  /**
+   * @brief Forward kinematics of SMPL model.
+   * @param betas: shape parameters, (10, 1).
+   * @param theta: pose parameters, (72, 1).
+   * @param translation: root translation parameters, (3, 1).
+   * @param joints: output joints, (24 * 3, 1).
+   * @param vertices: output extra joints, (21 * 3, 3).
+   */
   template<typename T>
   bool Forward(const beta_t<double> & beta,
                const theta_t<T>& theta,
                const translation_t<double>& translation,
                joint_t<T>* joints,
                vertex_t<T>* vertices) const;
+
+  /**
+   * @brief Forward kinematics of SMPL model outputting OpenPose joints.
+   * @param betas: shape parameters, (10, 1).
+   * @param theta: pose parameters, (72, 1).
+   * @param translation: root translation parameters, (3, 1).
+   * @param jointsOpenPose: output joints, (25 * 3, 1).
+   */
+  template<typename T>
+  bool ForwardOpenPose(const beta_t<double> & beta,
+                       const theta_t<T>& theta,
+                       const translation_t<double>& translation,
+                       joint_op_3d_t<T>* jointsOpenPose) const;
 
 };
 

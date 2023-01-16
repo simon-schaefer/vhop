@@ -191,4 +191,26 @@ bool SMPL::Forward(const beta_t<double> &beta,
   return true;
 }
 
+template<typename T>
+bool SMPL::ForwardOpenPose(const beta_t<double> & beta,
+                           const theta_t<T>& theta,
+                           const translation_t<double>& translation,
+                           joint_op_3d_t<T>* jointsOpenPose) const {
+  joint_t<T> joints;
+  vertex_t<T> vertices;
+  Forward(beta, theta, translation, &joints, &vertices);
+
+  // Combine the base and the additional joints to get the full joint set.
+  Eigen::Matrix<T, (JOINT_NUM + JOINT_NUM_EXTRA) * 3, 1> fullJoints;
+  fullJoints.template segment<JOINT_NUM * 3>(0) = joints;
+  fullJoints.template segment<JOINT_NUM_EXTRA * 3>(JOINT_NUM * 3) = vertices;
+
+  // Convert the joint set to the OpenPose format.
+  for (size_t j = 0; j < JOINT_NUM_OP; j++) {
+    int op_idx = OPENPOSE_JOINT_INDEXES[j];
+    jointsOpenPose->template segment<3>(j * 3) = fullJoints.template segment<3>(op_idx * 3);
+  }
+  return true;
+}
+
 }
