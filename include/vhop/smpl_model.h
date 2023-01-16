@@ -41,18 +41,22 @@ class SMPL {
   explicit SMPL(const std::string &path);
   ~SMPL();
 
-  bool Forward(const beta_t & beta,
-               const theta_t & theta,
-               joint_t* joints,
-               vertex_t* vertices) const;
-  bool Forward(const beta_t & beta,
-               const theta_t & theta,
-               const translation_t & translation,
-               joint_t * joints,
-               vertex_t * vertices) const;
+  template<typename T>
+  bool Forward(const beta_t<double> & beta,
+               const theta_t<T>& theta,
+               joint_t<T>* joints,
+               vertex_t<T>* vertices) const;
+  template<typename T>
+  bool Forward(const beta_t<double> & beta,
+               const theta_t<T>& theta,
+               const translation_t<double>& translation,
+               joint_t<T>* joints,
+               vertex_t<T>* vertices) const;
 
 };
 
 } // namespace vhop
+
+#include "vhop/implementation/smpl_model.hpp"
 
 #endif //VHOP_INCLUDE_VHOP_SMPL_MODEL_H_

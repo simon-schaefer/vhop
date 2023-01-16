@@ -32,11 +32,11 @@ TEST(SMPLModelTest, TestForward) {
     TestSMPL model("../data/smpl_neutral.npz");
     cnpy::npz_t npz = cnpy::npz_load("../data/test/smpl_forward.npz");
 
-    beta_t betas = vhop::utility::loadDoubleMatrix(npz.at("betas"), SHAPE_BASIS_DIM, 1);
-    theta_t thetas = vhop::utility::loadDoubleMatrix(npz.at("thetas"), JOINT_NUM * 3, 1);
-    translation_t translation = vhop::utility::loadDoubleMatrix(npz.at("t"), 3, 1);
-    joint_t joints;
-    vertex_t vertices;
+    beta_t<double> betas = vhop::utility::loadDoubleMatrix(npz.at("betas"), SHAPE_BASIS_DIM, 1);
+    theta_t<double> thetas = vhop::utility::loadDoubleMatrix(npz.at("thetas"), JOINT_NUM * 3, 1);
+    translation_t<double> translation = vhop::utility::loadDoubleMatrix(npz.at("t"), 3, 1);
+    joint_t<double> joints;
+    vertex_t<double> vertices;
     model.Forward(betas, thetas, translation, &joints, &vertices);
 
 //    cnpy::npz_t npzLBS = cnpy::npz_load("../data/test/smpl_lbs.npz");

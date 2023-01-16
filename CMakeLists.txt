@@ -24,7 +24,6 @@ include_directories( SYSTEM ${GTEST_INCLUDE_DIRS} )
 include_directories(include)
 add_library(${PROJECT_NAME}
     src/utility.cpp
-    src/smpl_model.cpp
     src/vposer/BatchNorm.cpp
     src/vposer/LatentDist.cpp
     src/vposer/LeakyRelu.cpp
