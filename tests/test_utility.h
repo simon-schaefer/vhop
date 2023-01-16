@@ -27,8 +27,3 @@ TEST(TestUtility, TestLoadDoubleMatrix) {
                       0.35795367, 0.14058801;
     EXPECT_TRUE(m.isApprox(expectedMatrix, 0.0001));
 }
-
-int main(int argc, char **argv){
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}

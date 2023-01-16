@@ -43,14 +43,6 @@ target_link_libraries(vhop_main ${PROJECT_NAME} ${DEPENDENCIES})
 
 # Testing with google tests.
 enable_testing()
-add_executable(vhop_test_utility tests/test_utility.cpp)
-target_link_libraries(vhop_test_utility ${PROJECT_NAME} GTest::gtest GTest::gtest_main)
-add_test(vhop_test_utility test_utility)
-
-add_executable(vhop_test_smpl tests/test_smpl_model.cpp)
-target_link_libraries(vhop_test_smpl ${PROJECT_NAME} GTest::gtest GTest::gtest_main ${DEPENDENCIES})
-add_test(vhop_test_smpl test_smpl)
-
-add_executable(vhop_test_vposer tests/test_vposer.cpp)
-target_link_libraries(vhop_test_vposer ${PROJECT_NAME} GTest::gtest GTest::gtest_main ${DEPENDENCIES})
-add_test(vhop_test_vposer test_vposer)
+add_executable(vhop_tests tests/test_main.cpp)
+target_link_libraries(vhop_tests ${PROJECT_NAME} GTest::gtest GTest::gtest_main)
+add_test(vhop_tests vhop_tests)

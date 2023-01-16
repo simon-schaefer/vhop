@@ -48,8 +48,3 @@ TEST(TestVPoser, TestForward){
     Eigen::MatrixXd sample_input = vhop::utility::loadDoubleMatrix("../data/vposer/sample_input/amass_body_input.txt", 500, 63);
     vposer.forward(sample_input);
 }
-
-int main(int argc, char **argv){
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}
