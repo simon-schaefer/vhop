@@ -29,5 +29,7 @@ Eigen::MatrixXd LatentDist::sample(){
         }
     }
     return out;
-
 }
+
+Eigen::MatrixXd LatentDist::getMean() {return mMu;}
+Eigen::MatrixXd LatentDist::getScale() {return mSigma;}

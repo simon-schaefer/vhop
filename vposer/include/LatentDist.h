@@ -16,6 +16,8 @@ class LatentDist {
     public:
         LatentDist(Eigen::MatrixXd mu, Eigen::MatrixXd sigma);
         Eigen::MatrixXd sample();
+        Eigen::MatrixXd getMean();
+        Eigen::MatrixXd getScale();
 
     private:
         Eigen::MatrixXd mMu;

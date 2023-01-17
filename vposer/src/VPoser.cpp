@@ -9,6 +9,7 @@
 #include "../include/LeakyRelu.h"
 #include "../include/BatchNorm.h"
 #include "../include/Transformations.h"
+#include "../include/VposerOutputs.h"
 #include <Eigen/Core>
 
 class SoftplusFunctor {
@@ -86,14 +87,17 @@ void VPoser::loadParams(){
 
 }
 
-void VPoser::forward(Eigen::MatrixXd input) {
+VposerOut VPoser::forward(Eigen::MatrixXd input) {
 
     LatentDist latentDist = encode(input);
 
     Eigen::MatrixXd latentSample = latentDist.sample();
 
-    Eigen::MatrixXd decoderOut = decode(latentSample);
+    DecoderOut decoderOut = decode(latentSample);
 
+    VposerOut modelOut {decoderOut, latentSample, latentDist.getMean(), latentDist.getScale()};
+
+    return modelOut;
 }
 
 LatentDist VPoser::encode(Eigen::MatrixXd input) {
@@ -111,7 +115,7 @@ LatentDist VPoser::encode(Eigen::MatrixXd input) {
     return LatentDist(mu_out, sigma);
 }
 
-Eigen::MatrixXd VPoser::decode(Eigen::MatrixXd input) {
+DecoderOut VPoser::decode(Eigen::MatrixXd input) {
 
     Eigen::MatrixXd x = input;
     int n_samples = input.rows();
@@ -149,7 +153,9 @@ Eigen::MatrixXd VPoser::decode(Eigen::MatrixXd input) {
         poseBodyMatrot.push_back(curPoseBodyMatrot);
     }
 
-    return x;
+    DecoderOut out {poseBody, poseBodyMatrot};
+
+    return out;
 }
 
 // Code for ContinousRotReprDecoder

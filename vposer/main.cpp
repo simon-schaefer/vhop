@@ -51,11 +51,11 @@ int main() {
 
 
     Eigen::MatrixXd decoder_sampled_input = vhop::utility::loadDoubleMatrix("C:\\Users\\Burak\\Exercises\\FinalProject\\vhop\\vposer\\data\\decoder_testing\\sampled.txt", 500, 32);
-    vposer.decode(decoder_sampled_input);
+    DecoderOut dout = vposer.decode(decoder_sampled_input);
 
 
     Eigen::MatrixXd sample_input = vhop::utility::loadDoubleMatrix("C:\\Users\\Burak\\Exercises\\FinalProject\\vhop\\vposer\\data\\sample_input\\amass_body_input.txt", 500, 63);
-    vposer.forward(sample_input);
+    VposerOut modelOut = vposer.forward(sample_input);
 
     return 0;
 }

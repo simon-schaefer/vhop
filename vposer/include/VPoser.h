@@ -3,6 +3,7 @@
 
 #include "Linear.h"
 #include "LatentDist.h"
+#include "VposerOutputs.h"
 
 class VPoser {
 
@@ -11,9 +12,9 @@ public:
     ~VPoser() = default;
     void printModel();
     void loadParams();
-    void forward(Eigen::MatrixXd input);
+    VposerOut forward(Eigen::MatrixXd input);
     LatentDist encode(Eigen::MatrixXd input);
-    Eigen::MatrixXd decode(Eigen::MatrixXd input);
+    DecoderOut decode(Eigen::MatrixXd input);
     std::vector<Eigen::MatrixXd> postProcess(Eigen::MatrixXd decoderOut);
     Eigen::Vector3d matrot2aa(Eigen::MatrixXd decoderOut);
 
