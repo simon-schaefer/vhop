@@ -174,34 +174,15 @@ bool SMPL::Forward(const beta_t<double> &beta,
 }
 
 template<typename T>
-bool SMPL::Forward(const beta_t<double> &beta,
-                   const joint_t<T> &theta,
-                   const translation_t<double> &translation,
-                   joint_t<T> *joints,
-                   vertex_t<T> *vertices) const {
-  Forward(beta, theta, joints, vertices);
-  if (joints != nullptr) {
-    joint_t<T> jointsShift = translation.replicate<JOINT_NUM, 1>();
-    *joints += jointsShift;
-  }
-  if (vertices != nullptr) {
-    vertex_t<T> vertexShift = translation.replicate<JOINT_NUM_EXTRA, 1>();
-    *vertices += vertexShift;
-  }
-  return true;
-}
-
-template<typename T>
 bool SMPL::ForwardOpenPose(const beta_t<double> & beta,
                            const theta_t<T>& theta,
-                           const translation_t<double>& translation,
                            joint_op_3d_t<T>* jointsOpenPose) const {
   joint_t<T> joints;
   vertex_t<T> vertices;
-  Forward(beta, theta, translation, &joints, &vertices);
+  Forward(beta, theta, &joints, &vertices);
 
   // Combine the base and the additional joints to get the full joint set.
-  Eigen::Matrix<T, (JOINT_NUM + JOINT_NUM_EXTRA) * 3, 1> fullJoints;
+  Eigen::Matrix<T, JOINT_NUM_TOTAL * 3, 1> fullJoints;
   fullJoints.template segment<JOINT_NUM * 3>(0) = joints;
   fullJoints.template segment<JOINT_NUM_EXTRA * 3>(JOINT_NUM * 3) = vertices;
 

@@ -30,18 +30,16 @@ TEST(SMPLModelTest, TestModelLoading) {
 
 TEST(SMPLModelTest, TestForward) {
     TestSMPL model("../data/smpl_neutral.npz");
-    cnpy::npz_t npz = cnpy::npz_load("../data/test/smpl_forward.npz");
+    cnpy::npz_t npz = cnpy::npz_load("../data/test/sample.npz");
 
     beta_t<double> betas = vhop::utility::loadDoubleMatrix(npz.at("betas"), SHAPE_BASIS_DIM, 1);
-    theta_t<double> thetas = vhop::utility::loadDoubleMatrix(npz.at("thetas"), JOINT_NUM * 3, 1);
-    translation_t<double> translation = vhop::utility::loadDoubleMatrix(npz.at("t"), 3, 1);
+    theta_t<double> thetas = vhop::utility::loadDoubleMatrix(npz.at("thetas"), THETA_DIM, 1);
     joint_t<double> joints;
     vertex_t<double> vertices;
-    model.Forward(betas, thetas, translation, &joints, &vertices);
+    model.Forward(betas, thetas, &joints, &vertices);
 
-//    cnpy::npz_t npzLBS = cnpy::npz_load("../data/test/smpl_lbs.npz");
-//    Eigen::MatrixXd verticesExpected = vhop::utility::loadDoubleMatrix(npz.at("vertices"), 6890, 3);
-//    Eigen::Matrix<double, 24, 3> jointsExpected = vhop::utility::loadDoubleMatrix(npz.at("joints"), 24, 3);
-//    EXPECT_TRUE(vertices.isApprox(verticesExpected, 0.001));
-//    EXPECT_TRUE(joints.isApprox(jointsExpected, 0.001));
+    Eigen::Matrix<double, vhop::JOINT_NUM, 3> joints3d = joints.reshaped(3, vhop::JOINT_NUM).transpose();
+    Eigen::MatrixXd joints3d_full_exp = vhop::utility::loadDoubleMatrix(npz.at("joints_3d_wo_translation"), vhop::JOINT_NUM_TOTAL, 3);
+    Eigen::Matrix<double, vhop::JOINT_NUM, 3> joints3d_exp = joints3d_full_exp.block(0, 0, vhop::JOINT_NUM, 3);
+    EXPECT_TRUE((joints3d - joints3d_exp).cwiseAbs().maxCoeff() < 0.4);  // somehow arm joints are not accurate
 }

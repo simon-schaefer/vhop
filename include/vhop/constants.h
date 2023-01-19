@@ -10,6 +10,7 @@ namespace vhop {
 constexpr size_t VERTEX_NUM = 6890;
 constexpr size_t JOINT_NUM = 24;
 constexpr size_t JOINT_NUM_EXTRA = 21;
+constexpr size_t JOINT_NUM_TOTAL = JOINT_NUM + JOINT_NUM_EXTRA;
 constexpr size_t JOINT_NUM_OP = 25;
 constexpr size_t SHAPE_BASIS_DIM = 10;
 constexpr size_t POSE_BASIS_DIM = 207;
