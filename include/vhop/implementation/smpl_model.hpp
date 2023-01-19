@@ -174,9 +174,11 @@ bool SMPL::Forward(const beta_t<double> &beta,
 }
 
 template<typename T>
-bool SMPL::ForwardOpenPose(const beta_t<double> & beta,
-                           const theta_t<T>& theta,
-                           joint_op_3d_t<T>* jointsOpenPose) const {
+bool vhop::SMPL::ComputeOpenPoseKP(const beta_t<double> & beta,
+                                   const theta_t<T>& theta,
+                                   const Eigen::Matrix4d& T_C_B,
+                                   const Eigen::Matrix3d& K,
+                                   joint_op_2d_t<T>* keypointsOpenPose) const {
   joint_t<T> joints;
   vertex_t<T> vertices;
   Forward(beta, theta, &joints, &vertices);
@@ -187,10 +189,23 @@ bool SMPL::ForwardOpenPose(const beta_t<double> & beta,
   fullJoints.template segment<JOINT_NUM_EXTRA * 3>(JOINT_NUM * 3) = vertices;
 
   // Convert the joint set to the OpenPose format.
+  joint_op_3d_t<T> jointsOpenPose3DFlat;
   for (size_t j = 0; j < JOINT_NUM_OP; j++) {
     int op_idx = OPENPOSE_JOINT_INDEXES[j];
-    jointsOpenPose->template segment<3>(j * 3) = fullJoints.template segment<3>(op_idx * 3);
+    jointsOpenPose3DFlat.template segment<3>(j * 3) = fullJoints.template segment<3>(op_idx * 3);
   }
+  Eigen::Matrix<T, vhop::JOINT_NUM_OP, 3> joints3d_B = jointsOpenPose3DFlat.reshaped(3, vhop::JOINT_NUM_OP).transpose();
+
+  // Convert 3D joints to camera frame.
+  Eigen::Matrix<T, vhop::JOINT_NUM_OP, 3> joints3d_C;
+  for (int i = 0; i < vhop::JOINT_NUM_OP; i++) {
+    Eigen::Vector<T, 4> joints3d_Bh_i(joints3d_B(i, 0), joints3d_B(i, 1), joints3d_B(i, 2), 1);
+    Eigen::Vector4d joints3d_Ch_i = T_C_B * joints3d_Bh_i;
+    joints3d_C.row(i) = joints3d_Ch_i.head(3).cast<T>();
+  }
+
+  // Pinhole camera projection.
+  *keypointsOpenPose = vhop::utility::project(joints3d_C, K);
   return true;
 }
 

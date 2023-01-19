@@ -3,6 +3,7 @@
 
 #include "vhop/utility.h"
 #include "vhop/smpl_model.h"
+#include "vhop/visualization.h"
 
 using namespace vhop;
 
@@ -42,4 +43,22 @@ TEST(SMPLModelTest, TestForward) {
     Eigen::MatrixXd joints3d_full_exp = vhop::utility::loadDoubleMatrix(npz.at("joints_3d_wo_translation"), vhop::JOINT_NUM_TOTAL, 3);
     Eigen::Matrix<double, vhop::JOINT_NUM, 3> joints3d_exp = joints3d_full_exp.block(0, 0, vhop::JOINT_NUM, 3);
     EXPECT_TRUE((joints3d - joints3d_exp).cwiseAbs().maxCoeff() < 0.4);  // somehow arm joints are not accurate
+}
+
+TEST(TestReprojectionError, TestOpenPoseReprojection) {
+  cnpy::npz_t npz = cnpy::npz_load("../data/test/sample.npz");
+  beta_t<double> beta = vhop::utility::loadDoubleMatrix(npz.at("betas"), vhop::SHAPE_BASIS_DIM, 1);
+  theta_t<double> theta = vhop::utility::loadDoubleMatrix(npz.at("thetas"), vhop::JOINT_NUM * 3, 1);
+  Eigen::Matrix3d K = vhop::utility::loadDoubleMatrix(npz.at("intrinsics"), 3, 3);
+  Eigen::Matrix4d T_C_B = vhop::utility::loadDoubleMatrix(npz.at("T_C_B"), 4, 4);
+  joint_op_2d_t<double> joints_kp = vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d"), 25, 2);
+
+  SMPL smpl_model("../data/smpl_neutral.npz");
+  joint_op_2d_t<double> joints_2d;
+  smpl_model.ComputeOpenPoseKP(beta, theta, T_C_B, K, &joints_2d);
+
+  vhop::visualization::drawKeypoints("../data/test/sample.jpg", joints_2d.cast<int>(), "../data/test/sample_reprojected.png");
+//  std::vector<double> errors(1);
+//  residual(theta.data(), errors.data());
+//  EXPECT_NEAR(errors[0], 0.0, 0.1);
 }

@@ -58,12 +58,16 @@ class SMPL {
    * @brief Forward kinematics of SMPL model outputting OpenPose joints.
    * @param betas: shape parameters, (10, 1).
    * @param theta: pose parameters, (72, 1).
-   * @param jointsOpenPose: output joints, (25 * 3, 1).
+   * @param T_C_B: transformation from camera to body frame (4, 4).
+   * @param K: camera intrinsics (3, 3).
+   * @param keypointsOpenPose: output joints, (25 * 3, 1).
    */
   template<typename T>
-  bool ForwardOpenPose(const beta_t<double> & beta,
-                       const theta_t<T>& theta,
-                       joint_op_3d_t<T>* jointsOpenPose) const;
+  bool ComputeOpenPoseKP(const beta_t<double> & beta,
+                         const theta_t<T>& theta,
+                         const Eigen::Matrix4d& T_C_B,
+                         const Eigen::Matrix3d& K,
+                         joint_op_2d_t<T>* keypointsOpenPose) const;
 
 };
 

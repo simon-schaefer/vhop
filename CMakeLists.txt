@@ -24,9 +24,14 @@ find_package(ZLIB REQUIRED)
 find_package(GTest REQUIRED)
 include_directories( SYSTEM ${GTEST_INCLUDE_DIRS} )
 
+# Package - OpenCV for visualization
+find_package(OpenCV REQUIRED)
+include_directories( SYSTEM ${OpenCV_INCLUDE_DIRS} )
+
 include_directories(include)
 add_library(${PROJECT_NAME}
     src/utility.cpp
+    src/visualization.cpp
     src/vposer/BatchNorm.cpp
     src/vposer/LatentDist.cpp
     src/vposer/LeakyRelu.cpp
@@ -38,13 +43,14 @@ target_link_libraries(${PROJECT_NAME}
    Eigen3::Eigen
    ZLIB::ZLIB
    ${CERES_LIBRARIES}
+   ${OpenCV_LIBRARIES}
 )
 
 add_executable(vhop_main main.cpp)
-target_link_libraries(vhop_main ${PROJECT_NAME} ${DEPENDENCIES} ${CERES_LIBRARIES})
+target_link_libraries(vhop_main ${PROJECT_NAME} ${DEPENDENCIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
 
 # Testing with google tests.
 enable_testing()
 add_executable(vhop_tests tests/test_main.cpp)
-target_link_libraries(vhop_tests ${PROJECT_NAME} GTest::gtest GTest::gtest_main)
+target_link_libraries(vhop_tests ${PROJECT_NAME} GTest::gtest GTest::gtest_main ${OpenCV_LIBRARIES})
 add_test(vhop_tests vhop_tests)

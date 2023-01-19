@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 
-#include "test_reprojection_error.h"
 #include "test_smpl_model.h"
 #include "test_vposer.h"
 #include "test_utility.h"
