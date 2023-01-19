@@ -18,5 +18,5 @@ TEST(TestReprojectionError, TestWGroundtruth) {
 
   SMPL smpl_model("../data/smpl_neutral.npz");
   ReprojectionError residual(beta, translation, K, joints_kp, smpl_model);
-  std::cout << residual.evaluate(thetas) << std::endl;
+  std::cout << residual.evaluate<double>(thetas) << std::endl;
 }

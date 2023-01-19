@@ -1,9 +1,6 @@
 # IDE
 .idea/
-
-# data directory
-data/smpl_csv/
-data/*.npz
+.DS_Store
 
 # build directory
 cmake-build-debug/

@@ -17,8 +17,8 @@ int main(int argc, char** argv) {
     vhop::SMPL smpl_model("../data/smpl_neutral.npz");
     vhop::theta_t<double> pose;
     ceres::Problem problem;
-//    ceres::CostFunction* cost_function = new ceres::AutoDiffCostFunction<ReprojectionError, 1, vhop::JOINT_NUM * 3>(
-//        new ReprojectionError(beta, translation, K, joints_kp, smpl_model));
+//    ceres::CostFunction* cost_function = new ceres::AutoDiffCostFunction<vhop::ReprojectionError, 1, vhop::JOINT_NUM * 3>(
+//        new vhop::ReprojectionError(beta, translation, K, joints_kp, smpl_model));
     ceres::CostFunction* cost_function = new ceres::NumericDiffCostFunction<vhop::ReprojectionError, ceres::CENTRAL, 1, vhop::JOINT_NUM * 3>(
         new vhop::ReprojectionError(beta, translation, K, joints_kp, smpl_model));
     problem.AddResidualBlock(cost_function, nullptr, pose.data());

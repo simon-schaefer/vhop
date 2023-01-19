@@ -24,16 +24,24 @@ public:
 
     bool operator()(const double *poseData, double *reprojection_error) const {
       vhop::theta_t<double> poses(poseData);
-      reprojection_error[0] = evaluate(poses);
+      reprojection_error[0] = evaluate<double>(poses);
       return true;
     }
 
-    double evaluate(const vhop::theta_t<double> &poses) const {
-      vhop::joint_op_3d_t<double> joints3dFlat;
-      smpl_model_.ForwardOpenPose<double>(beta_, poses, translation_, &joints3dFlat);
-      Eigen::Matrix<double, vhop::JOINT_NUM_OP, 3> joints3d = joints3dFlat.reshaped(vhop::JOINT_NUM_OP, 3);
+//    template <typename T>
+//    bool operator()(const T *poseData, T*reprojection_error) const {
+//      vhop::theta_t<T> poses(poseData);
+//      reprojection_error[0] = evaluate<T>(poses);
+//      return true;
+//    }
 
-      vhop::joint_op_2d_t<double> joints2d = vhop::utility::project(joints3d, K_);
+    template <typename T>
+    double evaluate(const vhop::theta_t<T> &poses) const {
+      vhop::joint_op_3d_t<T> joints3dFlat;
+      smpl_model_.ForwardOpenPose<T>(beta_, poses, translation_, &joints3dFlat);
+      Eigen::Matrix<T, vhop::JOINT_NUM_OP, 3> joints3d = joints3dFlat.reshaped(vhop::JOINT_NUM_OP, 3);
+
+      vhop::joint_op_2d_t<T> joints2d = vhop::utility::project(joints3d, K_);
       return (joint_kps_ - joints2d).squaredNorm();
     }
 
