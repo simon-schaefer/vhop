@@ -45,6 +45,14 @@ Eigen::VectorXd loadVector(const std::string& filePath, int row);
  */
 Eigen::Matrix3d rodriguesMatrix(const Eigen::Vector3d& rotVec);
 
+/**
+ * @brief Pinhole camera projection using given intrinsic parameters.
+ * @param p 3D points.
+ * @param K Intrinsic parameters.
+ * @return 2D points.
+ */
+Eigen::Matrix<double, Eigen::Dynamic, 2> project(const Eigen::Matrix<double, Eigen::Dynamic, 3>& p, const Eigen::Matrix3d& K);
+
 } // namespace vhop
 
 #endif //VHOP_INCLUDE_VHOP_UTILITY_IO_H_

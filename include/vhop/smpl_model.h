@@ -41,18 +41,38 @@ class SMPL {
   explicit SMPL(const std::string &path);
   ~SMPL();
 
-  bool Forward(const beta_t & beta,
-               const theta_t & theta,
-               joint_t* joints,
-               vertex_t* vertices) const;
-  bool Forward(const beta_t & beta,
-               const theta_t & theta,
-               const translation_t & translation,
-               joint_t * joints,
-               vertex_t * vertices) const;
+  /**
+   * @brief Forward kinematics of SMPL model.
+   * @param betas: shape parameters, (10, 1).
+   * @param theta: pose parameters, (72, 1).
+   * @param joints: output joints, (24 * 3, 1).
+   * @param vertices: output extra joints, (21 * 3, 3).
+   */
+  template<typename T>
+  bool Forward(const beta_t<double> & beta,
+               const theta_t<T>& theta,
+               joint_t<T>* joints,
+               vertex_t<T>* vertices) const;
+
+  /**
+   * @brief Forward kinematics of SMPL model outputting OpenPose joints.
+   * @param betas: shape parameters, (10, 1).
+   * @param theta: pose parameters, (72, 1).
+   * @param T_C_B: transformation from camera to body frame (4, 4).
+   * @param K: camera intrinsics (3, 3).
+   * @param keypointsOpenPose: output joints, (25 * 3, 1).
+   */
+  template<typename T>
+  bool ComputeOpenPoseKP(const beta_t<double> & beta,
+                         const theta_t<T>& theta,
+                         const Eigen::Matrix4d& T_C_B,
+                         const Eigen::Matrix3d& K,
+                         joint_op_2d_t<T>* keypointsOpenPose) const;
 
 };
 
 } // namespace vhop
+
+#include "vhop/implementation/smpl_model.hpp"
 
 #endif //VHOP_INCLUDE_VHOP_SMPL_MODEL_H_
