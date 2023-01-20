@@ -22,6 +22,7 @@ def process_sample(data_directory: pathlib.Path, camera_name: str, output_file: 
         keypoints_2d_data = json.load(f)
     keypoints_2d = np.array(keypoints_2d_data['people'][0]['pose_keypoints_2d']).reshape(-1, 3)
     keypoints_2d = keypoints_2d[:, :2].astype(int)
+    keypoints_scores = keypoints_2d[:, 2]
 
     intrinsic_data = cv2.FileStorage((data_directory / "intri.yml").as_posix(), cv2.FILE_STORAGE_READ)
     K = intrinsic_data.getNode(f"K_{camera_name}").mat()
@@ -79,6 +80,7 @@ def process_sample(data_directory: pathlib.Path, camera_name: str, output_file: 
         joints_3d_wo_translation=joints_3d_wo_translation[0].astype(np.float64),
         T_C_B=T_C_B[0].numpy().astype(np.float64),
         keypoints_2d=keypoints_2d.astype(np.float64),
+        keypoints_2d_scores=keypoints_scores.astype(np.float64),
         image=image
     )
     shutil.copy(image_file_name, output_file.with_suffix(".jpg").as_posix())
