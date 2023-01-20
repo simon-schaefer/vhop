@@ -2,6 +2,10 @@
 .idea/
 .DS_Store
 
+# Data directory.
+data/main.png
+data/test_smpl/*.png
+
 # build directory
 cmake-build-debug/
 cmake-build-release/

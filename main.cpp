@@ -13,14 +13,16 @@ int main(int argc, char** argv) {
     vhop::beta_t<double> beta = vhop::utility::loadDoubleMatrix(npz.at("betas"), vhop::SHAPE_BASIS_DIM, 1);
     Eigen::Matrix3d K = vhop::utility::loadDoubleMatrix(npz.at("intrinsics"), 3, 3);
     Eigen::Matrix4d T_C_B = vhop::utility::loadDoubleMatrix(npz.at("T_C_B"), 4, 4);
-    vhop::joint_op_2d_t<double> joints_2d_gt = vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d"), 25, 2);
+    vhop::joint_op_2d_t<double> joints_2d_gt = vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d"), vhop::JOINT_NUM_OP, 2);
+    vhop::joint_op_scores_t joints_2d_scores = vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d_scores"), vhop::JOINT_NUM_OP, 1);
 
     vhop::SMPL smpl_model("../data/smpl_neutral.npz");
     vhop::theta_t<double> pose = vhop::theta_t<double>::Zero();
     ceres::Problem problem;
     ceres::LossFunction* loss_function = new ceres::CauchyLoss(1.0);
-    ceres::CostFunction* cost_function = new ceres::NumericDiffCostFunction<vhop::ReprojectionError, ceres::CENTRAL, vhop::JOINT_NUM_OP * 2, vhop::JOINT_NUM * 3>(
-        new vhop::ReprojectionError(beta, K, T_C_B, joints_2d_gt, smpl_model));
+    ceres::CostFunction* cost_function = new ceres::NumericDiffCostFunction<
+        vhop::ReprojectionError, ceres::CENTRAL, vhop::JOINT_NUM_OP * 2, vhop::JOINT_NUM * 3>(
+        new vhop::ReprojectionError(beta, K, T_C_B, joints_2d_gt, joints_2d_scores, smpl_model));
     problem.AddResidualBlock(cost_function, loss_function, pose.data());
 
     ceres::Solver::Options options;
