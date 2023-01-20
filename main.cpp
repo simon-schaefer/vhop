@@ -16,22 +16,22 @@ int main(int argc, char** argv) {
     vhop::joint_op_2d_t<double> joints_2d_gt = vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d"), 25, 2);
 
     vhop::SMPL smpl_model("../data/smpl_neutral.npz");
-    vhop::theta_t<double> pose;
+    vhop::theta_t<double> pose = vhop::theta_t<double>::Zero();
     ceres::Problem problem;
-    ceres::CostFunction* cost_function = new ceres::NumericDiffCostFunction<vhop::ReprojectionError, ceres::CENTRAL, 1, vhop::JOINT_NUM * 3>(
+    ceres::LossFunction* loss_function = new ceres::CauchyLoss(1.0);
+    ceres::CostFunction* cost_function = new ceres::NumericDiffCostFunction<vhop::ReprojectionError, ceres::CENTRAL, vhop::JOINT_NUM_OP * 2, vhop::JOINT_NUM * 3>(
         new vhop::ReprojectionError(beta, K, T_C_B, joints_2d_gt, smpl_model));
-    problem.AddResidualBlock(cost_function, nullptr, pose.data());
+    problem.AddResidualBlock(cost_function, loss_function, pose.data());
 
     ceres::Solver::Options options;
-    options.max_num_iterations = 10;
+    options.max_num_iterations = 40;
     options.minimizer_progress_to_stdout = true;
-    options.num_threads = 1;
-
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
-    std::cout << summary.BriefReport() << std::endl;
+    std::cout << summary.FullReport() << std::endl;
 
     vhop::joint_op_2d_t<double> joints_2d;
+    std::cout << "pose: " << pose.transpose() << std::endl;
     smpl_model.ComputeOpenPoseKP(beta, pose, T_C_B, K, &joints_2d);
     vhop::visualization::drawKeypoints("../data/test/sample.jpg",
                                        joints_2d.cast<int>(),

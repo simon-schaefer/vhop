@@ -26,7 +26,11 @@ public:
       vhop::theta_t<double> poses(poseData);
       vhop::joint_op_2d_t<double> joints2d;
       smpl_model_.ComputeOpenPoseKP<double>(beta_, poses, T_C_B_, K_, &joints2d);
-      reprojection_error[0] = (joint_kps_ - joints2d).rowwise().norm().mean();
+
+      for (int i = 0; i < vhop::JOINT_NUM_OP; ++i) {
+          reprojection_error[i * 2] = joints2d(i, 0) - joint_kps_(i, 0);
+          reprojection_error[i * 2 + 1] = joints2d(i, 1) - joint_kps_(i, 1);
+      }
       return true;
     }
 

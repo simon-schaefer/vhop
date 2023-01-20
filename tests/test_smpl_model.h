@@ -42,7 +42,7 @@ TEST(SMPLModelTest, TestForward) {
     Eigen::Matrix<double, vhop::JOINT_NUM, 3> joints3d = joints.reshaped(3, vhop::JOINT_NUM).transpose();
     Eigen::MatrixXd joints3d_full_exp = vhop::utility::loadDoubleMatrix(npz.at("joints_3d_wo_translation"), vhop::JOINT_NUM_TOTAL, 3);
     Eigen::Matrix<double, vhop::JOINT_NUM, 3> joints3d_exp = joints3d_full_exp.block(0, 0, vhop::JOINT_NUM, 3);
-    EXPECT_TRUE((joints3d - joints3d_exp).cwiseAbs().maxCoeff() < 0.4);  // somehow arm joints are not accurate
+    EXPECT_TRUE((joints3d - joints3d_exp).cwiseAbs().maxCoeff() < 0.001);
 }
 
 TEST(TestReprojectionError, TestOpenPoseReprojection) {
@@ -58,7 +58,7 @@ TEST(TestReprojectionError, TestOpenPoseReprojection) {
 
   joint_op_2d_t<double> joints_kp = vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d"), 25, 2);
   for(int i = 0; i < 25; ++i) {
-    std::string outputFile = "../data/test/sample_reprojected_" + std::to_string(i) + ".png";
+    std::string outputFile = "../data/test_smpl/sample_reprojected_" + std::to_string(i) + ".png";
     vhop::visualization::drawKeypoints("../data/test/sample.jpg",
                                      joints_2d.block<1, 2>(i, 0).cast<int>(),
                                      joints_kp.block<1, 2>(i, 0).cast<int>(),
