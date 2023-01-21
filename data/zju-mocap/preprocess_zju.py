@@ -92,5 +92,5 @@ if __name__ == '__main__':
     smpl_model = smplx.SMPL(smpl_model_file)
 
     data_dir = pathlib.Path("/storage/user/sas/sas/zju-mocap/CoreView_387")
-    output_file = pathlib.Path("/usr/wiss/sas/vhop/data/test/sample.npz")
+    output_file = pathlib.Path("/usr/wiss/sas/vhop/data/zju-mocap/sample.npz")
     process_sample(data_dir, "Camera_B1", output_file, smpl_model=smpl_model, debug=args.debug)

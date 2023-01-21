@@ -14,7 +14,7 @@ TEST(TestVPoser, TestLinearLayer){
     Eigen::MatrixXd input = Eigen::MatrixXd::Random(1,5);
     input << 0.4454, 0.8607, 0.2194, 0.6060, 0.6443;
     Linear l1 = Linear(5, 10);
-    std::string weightPath = "../data/vposer/test_weights/linear";
+    std::string weightPath = "../data/test/linear";
     l1.loadParams(weightPath);
 
     Eigen::MatrixXd output = l1.forward(input);
@@ -28,7 +28,7 @@ TEST(TestVPoser, TestLinearLayer){
     input = Eigen::MatrixXd::Random(1,3);
     input(0,0) = -0.24; input(0,1) =  -24.2; input(0,2) =0.23;
     l1 = Linear(3, 5);
-    weightPath = "../data/vposer/test_weights/leaky";
+    weightPath = "../data/test/leaky";
     l1.loadParams(weightPath);
 
     output = l1.forward(input);
@@ -41,10 +41,9 @@ TEST(TestVPoser, TestLinearLayer){
 }
 
 TEST(TestVPoser, TestForward){
-    VPoser vposer = VPoser("../data/vposer/weights/", 512, 32);
-    // vposer.printModel();
-    vposer.loadParams();
-
-    Eigen::MatrixXd sample_input = vhop::utility::loadDoubleMatrix("../data/vposer/sample_input/amass_body_input.txt", 500, 63);
+    VPoser vposer = VPoser("../data/vposer/", 512, 32);
+    Eigen::MatrixXd sample_input = vhop::utility::loadDoubleMatrix("../data/test/amass_body_input.txt", 500, 63);
     vposer.forward(sample_input);
+
+
 }
