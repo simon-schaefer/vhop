@@ -1,4 +1,5 @@
 #include "vhop/utility.h"
+#include "vhop/constants.h"
 
 #include <cnpy.h>
 #include <fstream>
@@ -122,6 +123,41 @@ Eigen::MatrixXd vhop::utility::loadDoubleMatrix(const std::string& filePath, int
         throw std::invalid_argument( "loadded weight parameter dimension does not match with the weights" );
     }
     return out;
+}
+
+// Implementation from https://stackoverflow.com/questions/46663046/save-read-double-vector-from-file-c
+std::vector<double> vhop::utility::loadVector(const std::string& filePath) {
+    std::vector<char> buffer{};
+    std::ifstream ifs(filePath, std::ios::in | std::ifstream::binary);
+    std::istreambuf_iterator<char> iter(ifs);
+    std::istreambuf_iterator<char> end{};
+    std::copy(iter, end, std::back_inserter(buffer));
+    std::vector<double> newVector(buffer.size() / sizeof(double));
+    memcpy(&newVector[0], &buffer[0], buffer.size());
+    return newVector;
+}
+
+// Implementation from https://stackoverflow.com/questions/46663046/save-read-double-vector-from-file-c
+void vhop::utility::writeVector(const std::string& filename, const std::vector<double>& myVector) {
+    std::ofstream ofs(filename, std::ios::out | std::ofstream::binary);
+    std::ostream_iterator<char> osi{ ofs };
+    const char* beginByte = (char*)&myVector[0];
+
+    const char* endByte = (char*)&myVector.back() + sizeof(double);
+    std::copy(beginByte, endByte, osi);
+}
+
+void vhop::utility::writeSMPLParameters(const std::string& filePath,
+                                        const vhop::beta_t<double>& beta,
+                                        const vhop::theta_t<double>& theta) {
+    std::vector<double> outputs(vhop::SHAPE_BASIS_DIM + vhop::THETA_DIM);
+    for(int i = 0; i < vhop::SHAPE_BASIS_DIM; i++) {
+        outputs[i] = beta(i);
+    }
+    for(int i = 0; i < vhop::THETA_DIM; i++) {
+        outputs[i + SHAPE_BASIS_DIM] = theta(i);
+    }
+    writeVector(filePath, outputs);
 }
 
 

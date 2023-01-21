@@ -9,7 +9,7 @@
 
 
 int main(int argc, char** argv) {
-    cnpy::npz_t npz = cnpy::npz_load("../data/test/sample.npz");
+    cnpy::npz_t npz = cnpy::npz_load("../data/zju-mocap/sample.npz");
     cnpy::npz_t npz_means = cnpy::npz_load("../data/vposer_mean.npz");
     vhop::beta_t<double> beta = vhop::utility::loadDoubleMatrix(npz.at("betas"), vhop::SHAPE_BASIS_DIM, 1);
     Eigen::Matrix3d K = vhop::utility::loadDoubleMatrix(npz.at("intrinsics"), 3, 3);
@@ -35,12 +35,12 @@ int main(int argc, char** argv) {
     std::cout << summary.FullReport() << std::endl;
 
     vhop::joint_op_2d_t<double> joints_2d;
-    std::cout << "pose: " << pose.transpose() << std::endl;
     smpl_model.ComputeOpenPoseKP(beta, pose, T_C_B, K, &joints_2d);
-    vhop::visualization::drawKeypoints("../data/test/sample.jpg",
+    vhop::visualization::drawKeypoints("../data/zju-mocap/sample.jpg",
                                        joints_2d.cast<int>(),
                                        joints_2d_gt.cast<int>(),
-                                       "../data/test/main.png");
+                                       "../data/results/main.png");
+    vhop::utility::writeSMPLParameters("../data/results/smpl_params.bin", beta, pose);
 
     return 0;
 }

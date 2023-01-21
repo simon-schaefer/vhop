@@ -4,6 +4,8 @@
 #include <cnpy.h>
 #include <Eigen/Dense>
 
+#include "vhop/constants.h"
+
 namespace vhop::utility {
 
 /**
@@ -38,6 +40,28 @@ Eigen::MatrixXd loadDoubleMatrix(const std::string& filePath, int row, int col);
  * @return The loaded array.
  */
 Eigen::VectorXd loadVector(const std::string& filePath, int row);
+
+/**
+ * @brief Load a vector from a binary file.
+ * @param filePath Path to binary file.
+ */
+std::vector<double> loadVector(const std::string& filePath);
+
+/**
+ * @brief Write a vector of doubles to a binary file.
+ * @param myVector Vector of doubles.
+ * @param filePath output filename.
+ */
+void writeVector(const std::string& filePath, const std::vector<double>& myVector);
+
+/**
+ * @brief Write SMPL parameters to a binary file.
+ * @param beta SMPL shape parameters (10,).
+ * @param theta SMPL pose parameters (72,).
+ */
+void writeSMPLParameters(const std::string& filePath,
+                         const vhop::beta_t<double>& beta,
+                         const vhop::theta_t<double>& theta);
 
 /**
  * @brief Rodrigues' formula for rotation matrix from axis-angle representation.
