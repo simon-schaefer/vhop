@@ -2,7 +2,6 @@
 #include "vposer/LatentDist.h"
 
 LatentDist::LatentDist(Eigen::MatrixXd mu, Eigen::MatrixXd sigma){
-
     mMu = mu;
     mSigma = sigma;
 
@@ -15,9 +14,7 @@ LatentDist::LatentDist(Eigen::MatrixXd mu, Eigen::MatrixXd sigma){
 }
 
 Eigen::MatrixXd LatentDist::sample(){
-
     Eigen::MatrixXd out = Eigen::MatrixXd::Zero(mMu.rows(), mMu.cols());
-
     for(int i = 0; i < mMu.rows(); i++){
         for(int j = 0; j < mMu.cols(); j++){
             out(i,j) = dists[i*mMu.cols() + j](gen);

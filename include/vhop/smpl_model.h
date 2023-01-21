@@ -54,6 +54,12 @@ class SMPL {
                joint_t<T>* joints,
                vertex_t<T>* vertices) const;
 
+  template<typename T>
+  bool Forward(const beta_t<double> & beta,
+               const AlignedVector< Eigen::Matrix<T, 3, 3> >& rotMats,
+               joint_t<T>* joints,
+               vertex_t<T>* vertices) const;
+
   /**
    * @brief Forward kinematics of SMPL model outputting OpenPose joints.
    * @param betas: shape parameters, (10, 1).
@@ -68,7 +74,12 @@ class SMPL {
                          const Eigen::Matrix4d& T_C_B,
                          const Eigen::Matrix3d& K,
                          joint_op_2d_t<T>* keypointsOpenPose) const;
-
+  template<typename T>
+  bool ComputeOpenPoseKP(const beta_t<double> & beta,
+                         const AlignedVector< Eigen::Matrix<T, 3, 3> >& rotMats,
+                         const Eigen::Matrix4d& T_C_B,
+                         const Eigen::Matrix3d& K,
+                         joint_op_2d_t<T>* keypointsOpenPose) const;
 };
 
 } // namespace vhop

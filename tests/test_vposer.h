@@ -3,47 +3,55 @@
 #include <iostream>
 
 #include "vposer/VPoser.h"
+#include "vposer/BatchNorm.h"
+#include "vposer/Linear.h"
 #include "vposer/LeakyRelu.h"
 #include "vhop/utility.h"
 
+/**
+ * Test data creation in data/vposer_data.py
+ * See all parameters and matrix sizes in the Python file
+ */
 
 TEST(TestVPoser, TestLinearLayer){
-    // Linear Layer
-    // Input [0.4454, 0.8607, 0.2194, 0.6060, 0.6443]
-    // Output [ 0.0576, -0.2601,  0.7225,  0.4670, -0.0571,  0.3613, -0.6810, -0.9362, 0.7772, -0.0737]
-    Eigen::MatrixXd input = Eigen::MatrixXd::Random(1,5);
-    input << 0.4454, 0.8607, 0.2194, 0.6060, 0.6443;
-    Linear l1 = Linear(5, 10);
-    std::string weightPath = "../data/test/linear";
-    l1.loadParams(weightPath);
+    cnpy::npz_t npz = cnpy::npz_load("../data/test/linear_layer.npz");
+    Eigen::Vector<double, 3> z = vhop::utility::loadDoubleMatrix(npz.at("z"), 3, 1);
+    Linear l1 = Linear(3, 2, npz, "layer");
 
-    Eigen::MatrixXd output = l1.forward(input);
-    Eigen::MatrixXd expectedOutput(1,10);
-    expectedOutput << 0.0576, -0.2601,  0.7225,  0.4670, -0.0571,  0.3613, -0.6810, -0.9362, 0.7772, -0.0737;
-    EXPECT_TRUE(output.isApprox(expectedOutput, 0.001));
+    Eigen::Vector2d outExpected = vhop::utility::loadDoubleMatrix(npz.at("out"), 2, 1);
+    Eigen::Vector2d out = l1.forward(z);
+    EXPECT_TRUE(out.isApprox(outExpected, 0.001));
+}
 
-    // Linear + Leaky Relu
-    // Input [-0.24, -24.2, 0.23]
-    // Output [ 0.4959, -0.0185, -0.1139, 10.8231, -0.1283]
-    input = Eigen::MatrixXd::Random(1,3);
-    input(0,0) = -0.24; input(0,1) =  -24.2; input(0,2) =0.23;
-    l1 = Linear(3, 5);
-    weightPath = "../data/test/leaky";
-    l1.loadParams(weightPath);
+TEST(TestVPoser, TestBatchNorm){
+    cnpy::npz_t npz = cnpy::npz_load("../data/test/batch_norm.npz");
+    Eigen::Vector<double, 20> z = vhop::utility::loadDoubleMatrix(npz.at("z"), 20, 1);
+    BatchNorm l1 = BatchNorm(20, npz, "layer");
 
-    output = l1.forward(input);
-    LeakyRelu leakyRelu = LeakyRelu(0.1);
-    Eigen::MatrixXd lout = leakyRelu.forward(output);
+    Eigen::Vector<double, 20> outExpected = vhop::utility::loadDoubleMatrix(npz.at("out"), 20, 1);
+    Eigen::Vector<double, 20> out = l1.forward(z);
+    EXPECT_TRUE(out.isApprox(outExpected, 0.001));
+}
 
-    Eigen::MatrixXd expectedOutput2(1,5);
-    expectedOutput2 << 0.495944, -0.185348, -1.13853, 10.8231, -1.28328;
-    EXPECT_TRUE(lout.isApprox(expectedOutput2, 0.001));
+TEST(TestVPoser, TestLeakyRelu){
+    cnpy::npz_t npz = cnpy::npz_load("../data/test/leaky_relu.npz");
+    Eigen::Vector<double, 20> z = vhop::utility::loadDoubleMatrix(npz.at("z"), 20, 1);
+    LeakyRelu l1 = LeakyRelu(0.2);
+
+    Eigen::Vector<double, 20> outExpected = vhop::utility::loadDoubleMatrix(npz.at("out"), 20, 1);
+    Eigen::Vector<double, 20> out = l1.forward(z);
+    EXPECT_TRUE(out.isApprox(outExpected, 0.001));
 }
 
 TEST(TestVPoser, TestForward){
-    VPoser vposer = VPoser("../data/vposer/", 512, 32);
-    Eigen::MatrixXd sample_input = vhop::utility::loadDoubleMatrix("../data/test/amass_body_input.txt", 500, 63);
-    vposer.forward(sample_input);
+    VPoser vposer = VPoser("../data/vposer_weights.npz", 512, 32);
+    cnpy::npz_t npz = cnpy::npz_load("../data/test/vposer_data.npz");
+    Eigen::Vector<double, 32> z = vhop::utility::loadDoubleMatrix(npz.at("z"), 32, 1);
 
-
+    vhop::AlignedVector<Eigen::Matrix3d> rotMats = vposer.decode(z);
+    Eigen::Matrix<double, 21, 9> rotMatsExp = vhop::utility::loadDoubleMatrix3D(npz.at("R_out"), 21, 9);
+    for(int i = 0; i < 1; i++) {
+        Eigen::Matrix3d rotMatExp_i = rotMatsExp.row(i).reshaped(3, 3).transpose();
+        EXPECT_TRUE(rotMats[i].isApprox(rotMatExp_i, 0.001));
+    }
 }

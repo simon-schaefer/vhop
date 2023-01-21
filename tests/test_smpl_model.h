@@ -58,7 +58,7 @@ TEST(TestReprojectionError, TestOpenPoseReprojection) {
 
   joint_op_2d_t<double> joints_kp = vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d"), 25, 2);
   for(int i = 0; i < 25; ++i) {
-    std::string outputFile = "../data/test_smpl/sample_reprojected_" + std::to_string(i) + ".png";
+    std::string outputFile = "../data/test/smpl/sample_reprojected_" + std::to_string(i) + ".png";
     vhop::visualization::drawKeypoints("../data/zju-mocap/sample.jpg",
                                      joints_2d.block<1, 2>(i, 0).cast<int>(),
                                      joints_kp.block<1, 2>(i, 0).cast<int>(),

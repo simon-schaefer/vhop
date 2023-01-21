@@ -4,23 +4,22 @@
 #include "Linear.h"
 #include "LatentDist.h"
 
+#include "vhop/constants.h"
+
 class VPoser {
 
 public:
-    VPoser(const std::string weightsPath, int num_neurons, int latent_dim);
+    VPoser(const std::string& weightsPath, int nn, int z_dim);
     ~VPoser() = default;
     void printModel();
-    void loadParams();
-    void forward(Eigen::MatrixXd input);
-    LatentDist encode(Eigen::MatrixXd input);
-    Eigen::MatrixXd decode(Eigen::MatrixXd input);
-    void postProcess(Eigen::MatrixXd decoderOut);
+    vhop::AlignedVector<Eigen::Matrix3d> forward(const Eigen::MatrixXd& input);
+    LatentDist encode(const Eigen::MatrixXd& input);
+    vhop::AlignedVector<Eigen::Matrix3d> decode(const Eigen::MatrixXd& input);
+    vhop::AlignedVector<Eigen::Matrix3d> continuousRotReprDecoder(const Eigen::MatrixXd& decoderOut) const;
 
 private:
-
     int num_joints = 21;
     int num_features = num_joints * 3;
-    std::string mainWeightsPath = "";
     std::vector<BaseLayer*> encoder_layers;
     Linear* mu_layer;
     Linear* logvar_layer;
