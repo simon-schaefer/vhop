@@ -32,11 +32,11 @@ include_directories(include)
 add_library(${PROJECT_NAME}
     src/utility.cpp
     src/visualization.cpp
-    src/vposer/BatchNorm.cpp
-    src/vposer/LatentDist.cpp
-    src/vposer/LeakyRelu.cpp
-    src/vposer/Linear.cpp
-    src/vposer/VPoser.cpp
+    src/BatchNorm.cpp
+    src/LatentDist.cpp
+    src/LeakyRelu.cpp
+    src/Linear.cpp
+    src/VPoser.cpp
     ${CNPY_SOURCES}
 )
 target_link_libraries(${PROJECT_NAME}
@@ -46,8 +46,10 @@ target_link_libraries(${PROJECT_NAME}
    ${OpenCV_LIBRARIES}
 )
 
-add_executable(vhop_main main.cpp)
-target_link_libraries(vhop_main ${PROJECT_NAME} ${DEPENDENCIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(ceres_smpl apps/ceres_smpl.cpp)
+target_link_libraries(ceres_smpl ${PROJECT_NAME} ${DEPENDENCIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(ceres_vposer apps/ceres_vposer.cpp)
+target_link_libraries(ceres_vposer ${PROJECT_NAME} ${DEPENDENCIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
 
 # Testing with google tests.
 enable_testing()
