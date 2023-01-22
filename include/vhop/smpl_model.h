@@ -56,7 +56,7 @@ class SMPL {
 
   template<typename T>
   bool Forward(const beta_t<double> & beta,
-               const AlignedVector< Eigen::Matrix<T, 3, 3> >& rotMats,
+               const rotMats_t<T>& rotMats,
                joint_t<T>* joints,
                vertex_t<T>* vertices) const;
 
@@ -76,7 +76,7 @@ class SMPL {
                          joint_op_2d_t<T>* keypointsOpenPose) const;
   template<typename T>
   bool ComputeOpenPoseKP(const beta_t<double> & beta,
-                         const AlignedVector< Eigen::Matrix<T, 3, 3> >& rotMats,
+                         const rotMats_t<T>& rotMats,
                          const Eigen::Matrix4d& T_C_B,
                          const Eigen::Matrix3d& K,
                          joint_op_2d_t<T>* keypointsOpenPose) const;

@@ -1,5 +1,5 @@
-#ifndef VHOP_REPROJECTION_ERROR_H
-#define VHOP_REPROJECTION_ERROR_H
+#ifndef VHOP_INCLUDE_VHOP_RESIDUALS_RP_SMPL_H_
+#define VHOP_INCLUDE_VHOP_RESIDUALS_RP_SMPL_H_
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
@@ -10,11 +10,11 @@
 
 namespace vhop {
 
-class ReprojectionError {
+class ReprojectionErrorSMPL {
 
 public:
 
-    ReprojectionError(
+    ReprojectionErrorSMPL(
             const vhop::beta_t<double> &beta,
             const Eigen::Matrix3d &K,
             const Eigen::Matrix4d &T_C_B,
@@ -47,4 +47,4 @@ private:
 
 }  // namespace vhop
 
-#endif //VHOP_REPROJECTION_ERROR_H
+#endif //VHOP_INCLUDE_VHOP_RESIDUALS_RP_SMPL_H_

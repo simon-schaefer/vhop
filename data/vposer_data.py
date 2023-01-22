@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import torch
+torch.manual_seed(0)
 
 sys.path.append('/Users/sele/models/vposer/')
 from vposer_smpl import VPoser

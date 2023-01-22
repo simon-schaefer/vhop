@@ -5,17 +5,20 @@
 #include "LatentDist.h"
 
 #include "vhop/constants.h"
+#include "constants.h"
 
 class VPoser {
 
 public:
-    VPoser(const std::string& weightsPath, int nn, int z_dim);
+    VPoser(const std::string& weightsPath, int nn, int z_dim = vposer::LATENT_DIM);
     ~VPoser() = default;
     void printModel();
-    vhop::AlignedVector<Eigen::Matrix3d> forward(const Eigen::MatrixXd& input);
-    LatentDist encode(const Eigen::MatrixXd& input);
-    vhop::AlignedVector<Eigen::Matrix3d> decode(const Eigen::MatrixXd& input);
-    vhop::AlignedVector<Eigen::Matrix3d> continuousRotReprDecoder(const Eigen::MatrixXd& decoderOut) const;
+    [[nodiscard]] vhop::rotMats_t<double> forward(const Eigen::MatrixXd& input) const;
+    [[nodiscard]] LatentDist encode(const Eigen::MatrixXd& input) const;
+    [[nodiscard]] vhop::rotMats_t<double> decode(const vposer::latent_t<double>& z,
+                                                 bool returnFullRotMats = true) const;
+    [[nodiscard]] vhop::rotMats_t<double> continuousRotReprDecoder(const Eigen::MatrixXd& decoderOut,
+                                                                   bool returnFullRotMats = true) const;
 
 private:
     int num_joints = 21;

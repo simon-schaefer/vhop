@@ -53,7 +53,7 @@ bool SMPL::Forward(const beta_t<double> &beta,
                    joint_t<T> *joints,
                    vertex_t<T> *vertices) const {
     ///> compute rotation matrices
-    AlignedVector< Eigen::Matrix<T, 3, 3> > rotMats;
+    vhop::rotMats_t<T> rotMats;
     rotMats.reserve(JOINT_NUM);
     for (size_t i = 0; i < JOINT_NUM; i++) {
         const Eigen::Matrix<T, 3, 1> theta_i = theta.template segment<3>(i * 3);
@@ -66,7 +66,7 @@ bool SMPL::Forward(const beta_t<double> &beta,
 
 template<typename T>
 bool SMPL::Forward(const beta_t<double> & beta,
-                   const AlignedVector< Eigen::Matrix<T, 3, 3> >& rotMats,
+                   const rotMats_t<T>& rotMats,
                    joint_t<T>* joints,
                    vertex_t<T>* vertices) const {
     assert(rotMats.size() == vhop::JOINT_NUM);
@@ -229,7 +229,7 @@ bool SMPL::ComputeOpenPoseKP(const beta_t<double> & beta,
 
 template<typename T>
 bool SMPL::ComputeOpenPoseKP(const beta_t<double> & beta,
-                             const AlignedVector< Eigen::Matrix<T, 3, 3> >& rotMats,
+                             const rotMats_t<T>& rotMats,
                              const Eigen::Matrix4d& T_C_B,
                              const Eigen::Matrix3d& K,
                              joint_op_2d_t<T>* keypointsOpenPose) const {

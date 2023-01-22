@@ -44,13 +44,13 @@ TEST(TestVPoser, TestLeakyRelu){
 }
 
 TEST(TestVPoser, TestForward){
-    VPoser vposer = VPoser("../data/vposer_weights.npz", 512, 32);
+    VPoser vposer = VPoser("../data/vposer_weights.npz", 512);
     cnpy::npz_t npz = cnpy::npz_load("../data/test/vposer_data.npz");
-    Eigen::Vector<double, 32> z = vhop::utility::loadDoubleMatrix(npz.at("z"), 32, 1);
+    vposer::latent_t<double> z = vhop::utility::loadDoubleMatrix(npz.at("z"), vposer::LATENT_DIM, 1);
 
-    vhop::AlignedVector<Eigen::Matrix3d> rotMats = vposer.decode(z);
-    Eigen::Matrix<double, 21, 9> rotMatsExp = vhop::utility::loadDoubleMatrix3D(npz.at("R_out"), 21, 9);
-    for(int i = 0; i < 1; i++) {
+    vhop::AlignedVector<Eigen::Matrix3d> rotMats = vposer.decode(z, false);
+    Eigen::Matrix<double, 21, 9> rotMatsExp = vhop::utility::loadDoubleMatrix(npz.at("R_out"), 21, 9);
+    for(int i = 0; i < rotMats.size(); i++) {
         Eigen::Matrix3d rotMatExp_i = rotMatsExp.row(i).reshaped(3, 3).transpose();
         EXPECT_TRUE(rotMats[i].isApprox(rotMatExp_i, 0.001));
     }

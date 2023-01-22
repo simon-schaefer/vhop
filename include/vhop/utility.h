@@ -53,12 +53,19 @@ void writeSMPLParameters(const std::string& filePath,
 Eigen::Matrix3d rodriguesMatrix(const Eigen::Vector3d& rotVec);
 
 /**
+ * @brief Convert rotation matrix to axis-angle representation.
+ * @param R Rotation matrix.
+ */
+Eigen::Vector3d rodriguesVector(const Eigen::Matrix3d& R);
+
+/**
  * @brief Pinhole camera projection using given intrinsic parameters.
  * @param p 3D points.
  * @param K Intrinsic parameters.
  * @return 2D points.
  */
-Eigen::Matrix<double, Eigen::Dynamic, 2> project(const Eigen::Matrix<double, Eigen::Dynamic, 3>& p, const Eigen::Matrix3d& K);
+Eigen::Matrix<double, Eigen::Dynamic, 2> project(const Eigen::Matrix<double, Eigen::Dynamic, 3>& p,
+                                                 const Eigen::Matrix3d& K);
 
 } // namespace vhop
 

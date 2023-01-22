@@ -85,6 +85,10 @@ Eigen::Matrix<double, 3, 3> vhop::utility::rodriguesMatrix(const Eigen::Vector3d
     return R;
 }
 
+Eigen::Vector3d vhop::utility::rodriguesVector(const Eigen::Matrix3d &R) {
+    Eigen::AngleAxisd r(R);
+    return r.angle() * r.axis();
+}
 
 Eigen::Matrix<double, Eigen::Dynamic, 2> vhop::utility::project(const Eigen::Matrix<double, Eigen::Dynamic, 3>& p, const Eigen::Matrix3d& K) {
     Eigen::Matrix<double, Eigen::Dynamic, 2> p2d(p.rows(), 2);

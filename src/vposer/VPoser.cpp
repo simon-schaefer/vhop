@@ -55,13 +55,13 @@ void VPoser::printModel() {
     }
 }
 
-vhop::AlignedVector<Eigen::Matrix3d> VPoser::forward(const Eigen::MatrixXd& input) {
+vhop::AlignedVector<Eigen::Matrix3d> VPoser::forward(const Eigen::MatrixXd& input) const {
     LatentDist latentDist = encode(input);
     Eigen::MatrixXd z = latentDist.sample();
     return decode(z);
 }
 
-LatentDist VPoser::encode(const Eigen::MatrixXd& input) {
+LatentDist VPoser::encode(const Eigen::MatrixXd& input) const {
     Eigen::MatrixXd x = input;
     for(auto & encoder_layer : encoder_layers){
         x = encoder_layer->forward(x);
@@ -72,15 +72,17 @@ LatentDist VPoser::encode(const Eigen::MatrixXd& input) {
     return {mu_out, sigma};  // LatentDist w/ brace initializer
 }
 
-vhop::AlignedVector<Eigen::Matrix3d> VPoser::decode(const Eigen::MatrixXd& input) {
+vhop::AlignedVector<Eigen::Matrix3d> VPoser::decode(const vposer::latent_t<double>& input,
+                                                    bool returnFullRotMats) const {
     Eigen::MatrixXd x = input;
     for(auto & decoder_layer : decoder_layers){
         x = decoder_layer->forward(x);
     }
-    return continuousRotReprDecoder(x);
+    return continuousRotReprDecoder(x, returnFullRotMats);
 }
 
-vhop::AlignedVector<Eigen::Matrix3d> VPoser::continuousRotReprDecoder(const Eigen::MatrixXd& decoderOut) const {
+vhop::AlignedVector<Eigen::Matrix3d> VPoser::continuousRotReprDecoder(const Eigen::MatrixXd& decoderOut,
+                                                                      bool returnFullRotMats) const {
     assert(decoderOut.rows() == decoderOut.size());  // currently no batching supported
     assert(decoderOut.rows() == num_joints * 6);
     size_t encoding_size = num_joints * 6 * 21;
@@ -128,6 +130,19 @@ vhop::AlignedVector<Eigen::Matrix3d> VPoser::continuousRotReprDecoder(const Eige
         rotMat.block<3, 1>(0, 1) = b2.block<1, 3>(i, 0);
         rotMat.block<3, 1>(0, 2) = b3.block<1, 3>(i, 0);
         rotMats.at(i) = rotMat;
+    }
+
+    // If returnFullRotMats is true, then the output is of size 24, otherwise it is of size 21.
+    if(returnFullRotMats) {
+        vhop::AlignedVector<Eigen::Matrix3d> fullRotMats(24);
+        for(int i = 0; i < rotMats.size(); i++) {
+            fullRotMats.at(i + 1) = rotMats.at(i);
+        }
+        fullRotMats.at(0) = Eigen::Matrix3d::Identity();  // root joint
+        fullRotMats.at(22) = Eigen::Matrix3d::Identity();  // left hand joint
+        fullRotMats.at(23) = Eigen::Matrix3d::Identity();  // right hand joint
+
+        return fullRotMats;
     }
     return rotMats;
 }

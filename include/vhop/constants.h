@@ -4,7 +4,6 @@
 #include <Eigen/Dense>
 #include <vector>
 
-
 namespace vhop {
 
 constexpr size_t VERTEX_NUM = 6890;
@@ -32,6 +31,8 @@ template<typename T>
 using beta_t = Eigen::Matrix<T, SHAPE_BASIS_DIM, 1>;
 template<typename T>
 using theta_t = Eigen::Matrix<T, THETA_DIM, 1>;
+template<typename T>
+using rotMats_t = AlignedVector<Eigen::Matrix<T, 3, 3>>;
 template<typename T>
 using translation_t = Eigen::Matrix<T, 3, 1>;
 template<typename T>

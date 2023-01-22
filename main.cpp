@@ -2,10 +2,15 @@
 #include <Eigen/Core>
 
 #include "vhop/constants.h"
-#include "vhop/reprojection_error.h"
 #include "vhop/smpl_model.h"
 #include "vhop/utility.h"
 #include "vhop/visualization.h"
+
+#include "vposer/constants.h"
+#include "vposer/VPoser.h"
+
+#include "vhop/residuals/rp_smpl.h"
+#include "vhop/residuals/rp_vposer.h"
 
 
 int main(int argc, char** argv) {
@@ -18,14 +23,22 @@ int main(int argc, char** argv) {
     vhop::joint_op_scores_t joints_2d_scores = vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d_scores"), vhop::JOINT_NUM_OP, 1);
 
     vhop::SMPL smpl_model("../data/smpl_neutral.npz");
-    // vhop::theta_t<double> pose = vhop::utility::loadDoubleMatrix(npz_means.at("thetas"), vhop::THETA_DIM, 1);
-    vhop::theta_t<double> pose = vhop::theta_t<double>::Zero();
+    VPoser vposer_model("../data/vposer_weights.npz", 512);
+    vposer::latent_t<double> z = vposer::latent_t<double>::Zero();
     ceres::Problem problem;
     ceres::LossFunction* loss_function = new ceres::CauchyLoss(1.0);
     ceres::CostFunction* cost_function = new ceres::NumericDiffCostFunction<
-        vhop::ReprojectionError, ceres::CENTRAL, vhop::JOINT_NUM_OP * 2, vhop::JOINT_NUM * 3>(
-        new vhop::ReprojectionError(beta, K, T_C_B, joints_2d_gt, joints_2d_scores, smpl_model));
-    problem.AddResidualBlock(cost_function, loss_function, pose.data());
+        vhop::ReprojectionErrorVPoser, ceres::CENTRAL, vhop::JOINT_NUM_OP * 2, vposer::LATENT_DIM>(
+        new vhop::ReprojectionErrorVPoser(beta, vposer_model, K, T_C_B, joints_2d_gt, joints_2d_scores, smpl_model));
+    problem.AddResidualBlock(cost_function, loss_function, z.data());
+
+//    vhop::theta_t<double> pose = vhop::theta_t<double>::Zero();
+//    ceres::Problem problem;
+//    ceres::LossFunction* loss_function = new ceres::CauchyLoss(1.0);
+//    ceres::CostFunction* cost_function = new ceres::NumericDiffCostFunction<
+//        vhop::ReprojectionErrorSMPL, ceres::CENTRAL, vhop::JOINT_NUM_OP * 2, vhop::JOINT_NUM * 3>(
+//        new vhop::ReprojectionErrorSMPL(beta, K, T_C_B, joints_2d_gt, joints_2d_scores, smpl_model));
+//    problem.AddResidualBlock(cost_function, loss_function, pose.data());
 
     ceres::Solver::Options options;
     options.max_num_iterations = 40;
@@ -35,12 +48,14 @@ int main(int argc, char** argv) {
     std::cout << summary.FullReport() << std::endl;
 
     vhop::joint_op_2d_t<double> joints_2d;
-    smpl_model.ComputeOpenPoseKP(beta, pose, T_C_B, K, &joints_2d);
+    vhop::rotMats_t<double> rotMats = vposer_model.decode(z);
+    smpl_model.ComputeOpenPoseKP(beta, rotMats, T_C_B, K, &joints_2d);
+    // smpl_model.ComputeOpenPoseKP(beta, pose, T_C_B, K, &joints_2d);
     vhop::visualization::drawKeypoints("../data/zju-mocap/sample.jpg",
                                        joints_2d.cast<int>(),
                                        joints_2d_gt.cast<int>(),
                                        "../data/results/main.png");
-    vhop::utility::writeSMPLParameters("../data/results/smpl_params.bin", beta, pose);
+//    vhop::utility::writeSMPLParameters("../data/results/smpl_params.bin", beta, pose);
 
     return 0;
 }
