@@ -5,7 +5,19 @@
 #include <fstream>
 #include <iostream>
 #include <Eigen/Dense>
+#include <vector>
 
+
+std::vector<std::filesystem::path> vhop::utility::listFilesRecursively(const std::string& directory,
+                                                                       const std::string& suffix) {
+    std::vector<std::filesystem::path> outputs;
+    for(const auto& file : std::filesystem::recursive_directory_iterator(directory)) {
+        const auto &filePath = file.path();
+        if (filePath.extension() != ".npz") continue;
+        outputs.emplace_back(filePath);
+    }
+    return outputs;
+}
 
 Eigen::MatrixXd vhop::utility::loadDoubleMatrix3D(const cnpy::NpyArray& raw, int r, int c, int dim) {
     std::vector<double> dataVector;

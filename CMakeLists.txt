@@ -46,10 +46,8 @@ target_link_libraries(${PROJECT_NAME}
    ${OpenCV_LIBRARIES}
 )
 
-add_executable(ceres_smpl apps/ceres_smpl.cpp)
-target_link_libraries(ceres_smpl ${PROJECT_NAME} ${DEPENDENCIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
-add_executable(ceres_vposer apps/ceres_vposer.cpp)
-target_link_libraries(ceres_vposer ${PROJECT_NAME} ${DEPENDENCIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(process_dataset apps/process_dataset.cpp)
+target_link_libraries(process_dataset ${PROJECT_NAME} ${DEPENDENCIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
 
 # Testing with google tests.
 enable_testing()

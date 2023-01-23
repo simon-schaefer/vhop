@@ -3,10 +3,19 @@
 
 #include <cnpy.h>
 #include <Eigen/Dense>
+#include <filesystem>
 
 #include "vhop/constants.h"
 
 namespace vhop::utility {
+
+/**
+ * List all files in a directory recursively with a given suffix.
+ * @param directory Directory path.
+ * @param suffix file suffix, files with other suffix are omitted.
+ */
+std::vector<std::filesystem::path> listFilesRecursively(const std::string& directory,
+                                                        const std::string& suffix);
 
 /**
  * @brief Load one dimension of a 3D numpy array from a npz file.

@@ -6,6 +6,8 @@
 data/test/smpl/*.png
 data/results/*.png
 data/results/*.bin
+data/results/CoreView_*
+data/zju-mocap/processed
 
 # build directory
 cmake-build-debug/
