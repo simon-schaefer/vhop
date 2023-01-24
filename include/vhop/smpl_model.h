@@ -39,7 +39,6 @@ class SMPL {
 
   // Load model data stored into current application.
   explicit SMPL(const std::string &path);
-  ~SMPL();
 
   /**
    * @brief Forward kinematics of SMPL model.
@@ -84,6 +83,6 @@ class SMPL {
 
 } // namespace vhop
 
-#include "vhop/implementation/smpl_model.hpp"
+#include "vhop/implementation/smpl_impl.hpp"
 
 #endif //VHOP_INCLUDE_VHOP_SMPL_MODEL_H_

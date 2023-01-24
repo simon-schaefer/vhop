@@ -31,6 +31,7 @@ include_directories( SYSTEM ${OpenCV_INCLUDE_DIRS} )
 include_directories(include)
 add_library(${PROJECT_NAME}
     src/utility.cpp
+    src/smpl_model.cpp
     src/visualization.cpp
     src/BatchNorm.cpp
     src/LatentDist.cpp
