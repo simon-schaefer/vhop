@@ -101,8 +101,7 @@ def main():
     if not camera_dir.exists():
         raise FileNotFoundError(f"Camera directory {camera_dir.as_posix()} not found")
 
-    output_dir = pathlib.Path("processed")  # TODO: add current file directory
-    output_dir = output_dir / args.sample_name / args.camera_name
+    output_dir = pathlib.Path("") / args.sample_name / args.camera_name
     output_dir.mkdir(exist_ok=True, parents=True)
     camera_image_files = list(camera_dir.glob("*.jpg"))
     for image_path in tqdm.tqdm(camera_image_files):
