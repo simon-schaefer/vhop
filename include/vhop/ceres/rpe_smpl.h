@@ -2,6 +2,7 @@
 #define VHOP_INCLUDE_VHOP_CERES_RPE_SMPL_H_
 
 #include "vhop/constants.h"
+#include "vhop/utility.h"
 #include "base_residual.h"
 
 namespace vhop {

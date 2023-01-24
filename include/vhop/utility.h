@@ -10,6 +10,12 @@
 namespace vhop::utility {
 
 /**
+ * @brief Convert a method enum to a string.
+ * @param method Method enum.
+ */
+std::string method2String(const Methods& method);
+
+/**
  * List all files in a directory recursively with a given suffix.
  * @param directory Directory path.
  * @param suffix file suffix, files with other suffix are omitted.

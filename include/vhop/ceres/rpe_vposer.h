@@ -1,7 +1,6 @@
 #ifndef VHOP_INCLUDE_VHOP_CERES_RPE_VPOSER_H_
 #define VHOP_INCLUDE_VHOP_CERES_RPE_VPOSER_H_
 
-
 #include "vhop/constants.h"
 #include "vhop/utility.h"
 #include "vposer/VPoser.h"
@@ -66,8 +65,8 @@ class ReprojectionErrorVPoser : public vhop::ResidualBase {
       }
   }
 
-  int getNumParams() override { return vhop::THETA_DIM; }
-  int getNumResiduals() override { return vhop::JOINT_NUM_OP * 2; }
+  static constexpr int getNumParams() { return vhop::THETA_DIM; }
+  static constexpr int getNumResiduals() { return vhop::JOINT_NUM_OP * 2; }
 
  private:
   VPoser vposer_;

@@ -1,11 +1,19 @@
 #include "vhop/utility.h"
-#include "vhop/constants.h"
 
 #include <cnpy.h>
 #include <fstream>
 #include <iostream>
 #include <Eigen/Dense>
 #include <vector>
+
+
+std::string vhop::utility::method2String(const Methods& method) {
+    switch (method) {
+        case smplx: return "smpl";
+        case vposerx: return "vposer";
+        default: return "unknown";
+    }
+}
 
 
 std::vector<std::filesystem::path> vhop::utility::listFilesRecursively(const std::string& directory,
