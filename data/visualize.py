@@ -8,6 +8,8 @@ import smplx
 import torch
 import torram
 
+from typing import Tuple
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -16,7 +18,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def compute_smpl_vertices(smpl_model: smplx.SMPL, betas: np.ndarray, thetas: np.ndarray, T: np.ndarray) -> np.ndarray:
+def compute_smpl_vertices(smpl_model: smplx.SMPL, betas: np.ndarray, thetas: np.ndarray, T: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     betas_t = torch.tensor(betas, dtype=torch.float32).view(1, 10)
     thetas_t = torch.tensor(thetas, dtype=torch.float32).view(1, 72)
     smpl_output = smpl_model.forward(betas_t, thetas_t[:, 3:], global_orient=thetas_t[:, :3])

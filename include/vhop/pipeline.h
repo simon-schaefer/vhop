@@ -2,30 +2,31 @@
 #define VHOP_INCLUDE_VHOP_PIPELINE_H_
 
 #include "ceres/ceres.h"
-#include "vhop/ceres/base_residual.h"
+#include "vhop/ceres/base_rpe_residual.h"
 
 namespace vhop {
 
 class Pipeline {
 
 public:
-  explicit Pipeline(const vhop::SMPL &smpl);
+    Pipeline(vhop::SMPL smpl, ceres::Solver::Options solverOptions, bool verbose = false);
 
-  bool process(const std::string &filePath,
-               const std::string &outputPath,
-               const vhop::Methods &method,
-               bool doPrintSummary = false);
+    bool process(const std::string &filePath,
+                 const std::string& outputPath,
+                 const vhop::Methods& method,
+                 const std::string& imagePath = "") const;
 
-  void setSMPLCostFunction(const std::string &filePath,
-                           vhop::ResidualBase **cost,
-                           ceres::CostFunction **costFunction);
-  void setVPoserCostFunction(const std::string &filePath,
-                             vhop::ResidualBase **cost,
-                             ceres::CostFunction **costFunction);
+protected:
+    bool addReprojectionCostFunction(const std::string &filePath,
+                                     const vhop::Methods &method,
+                                     vhop::RPEResidualBase **cost,
+                                     ceres::LossFunction **lossFunction,
+                                     Eigen::VectorXd &x0,
+                                     ceres::Problem &problem) const;
 
- protected:
-  vhop::SMPL smpl_model_;
-
+    vhop::SMPL smpl_model_;
+    ceres::Solver::Options ceres_options_;
+    bool verbose_;
 };
 
 }
