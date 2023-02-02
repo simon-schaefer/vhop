@@ -4,39 +4,35 @@
 #include "vhop/constants.h"
 #include "vhop/utility.h"
 #include "vposer/VPoser.h"
-#include "base_residual.h"
+#include "base_rpe_residual.h"
 
 namespace vhop {
 
-class ReprojectionErrorVPoser : public vhop::ResidualBase {
+class ReprojectionErrorVPoser : public vhop::RPEResidualBase {
 
  public:
 
   ReprojectionErrorVPoser(const std::string &dataFilePath, const vhop::SMPL &smpl_model)
-      : ResidualBase(dataFilePath, smpl_model), vposer_("../data/vposer_weights.npz", 512) {
+      : RPEResidualBase(dataFilePath, smpl_model), vposer_("../data/vposer_weights.npz", 512) {
       cnpy::npz_t npz = cnpy::npz_load(dataFilePath);
       beta_ = vhop::utility::loadDoubleMatrix(npz.at("betas"), vhop::SHAPE_BASIS_DIM, 1);
-      K_ = vhop::utility::loadDoubleMatrix(npz.at("intrinsics"), 3, 3);
-      T_C_B_ = vhop::utility::loadDoubleMatrix(npz.at("T_C_B"), 4, 4);
-      joint_kps_ = vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d"), vhop::JOINT_NUM_OP, 2);
-      joint_kps_scores_ = vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d_scores"), vhop::JOINT_NUM_OP, 1);
   }
 
   ReprojectionErrorVPoser(
-      const vhop::beta_t<double> &beta,
+      vhop::beta_t<double> beta,
       const VPoser& vposer,
-      const Eigen::Matrix3d &K,
-      const Eigen::Matrix4d &T_C_B,
-      const vhop::joint_op_2d_t<double> &joint_kps,
-      const vhop::joint_op_scores_t &kp_scores,
-      const vhop::SMPL &smpl_model)
-      : ResidualBase(smpl_model),
-        beta_(beta),
-        vposer_(vposer),
-        T_C_B_(T_C_B),
-        K_(K),
-        joint_kps_(joint_kps),
-        joint_kps_scores_(kp_scores) {}
+      Eigen::Matrix3d K,
+      Eigen::Matrix4d T_C_B,
+      vhop::joint_op_2d_t<double> joint_kps,
+      vhop::joint_op_scores_t kp_scores,
+      vhop::SMPL smpl_model)
+      : RPEResidualBase(std::move(smpl_model),
+                        std::move(K),
+                        std::move(T_C_B),
+                        std::move(joint_kps),
+                        std::move(kp_scores)),
+      beta_(std::move(beta)),
+      vposer_(vposer) {}
 
   bool operator()(const double *latentZ, double *reprojection_error) const override {
       vposer::latent_t<double> z(latentZ);
@@ -70,11 +66,7 @@ class ReprojectionErrorVPoser : public vhop::ResidualBase {
 
  private:
   VPoser vposer_;
-  Eigen::Matrix3d K_;
-  Eigen::Matrix4d T_C_B_;
   vhop::beta_t<double> beta_;
-  vhop::joint_op_2d_t<double> joint_kps_;
-  vhop::joint_op_scores_t joint_kps_scores_;
 };
 
 }
