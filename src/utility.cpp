@@ -3,6 +3,7 @@
 #include <cnpy.h>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <Eigen/Dense>
 #include <vector>
 
