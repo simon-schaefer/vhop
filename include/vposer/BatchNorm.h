@@ -6,7 +6,7 @@
 class BatchNorm : public BaseLayer{
 
 public:
-    BatchNorm(int numFeatures);
+    explicit BatchNorm(int numFeatures);
     BatchNorm(int numFeatures, const cnpy::npz_t& raw, const std::string& name);
     ~BatchNorm() override = default;
 

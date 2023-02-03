@@ -7,7 +7,7 @@
 class LeakyRelu : public BaseLayer {
 
     public:
-        LeakyRelu(double alpha = 0.1);
+        explicit LeakyRelu(double alpha = 0.1);
         ~LeakyRelu() override = default;
 
         Eigen::MatrixXd forward(const Eigen::MatrixXd &x) override;

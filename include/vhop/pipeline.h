@@ -9,15 +9,15 @@ namespace vhop {
 class Pipeline {
 
 public:
-    Pipeline(vhop::SMPL smpl, ceres::Solver::Options solverOptions, bool verbose = false);
+    Pipeline(vhop::SMPL  smpl, ceres::Solver::Options solverOptions, bool verbose = false);
 
-    bool process(const std::string &filePath,
+    [[nodiscard]] bool process(const std::string &filePath,
                  const std::string& outputPath,
                  const vhop::Methods& method,
                  const std::string& imagePath = "") const;
 
 protected:
-    bool addReprojectionCostFunction(const std::string &filePath,
+    bool addReProjectionCostFunction(const std::string &filePath,
                                      const vhop::Methods &method,
                                      vhop::RPEResidualBase **cost,
                                      ceres::LossFunction **lossFunction,

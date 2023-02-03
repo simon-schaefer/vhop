@@ -8,17 +8,17 @@
 
 namespace vhop {
 
-class ReprojectionErrorVPoser : public vhop::RPEResidualBase {
+class ReProjectionErrorVPoser : public vhop::RPEResidualBase {
 
  public:
 
-  ReprojectionErrorVPoser(const std::string &dataFilePath, const vhop::SMPL &smpl_model)
+  ReProjectionErrorVPoser(const std::string &dataFilePath, const vhop::SMPL &smpl_model)
       : RPEResidualBase(dataFilePath, smpl_model), vposer_("../data/vposer_weights.npz", 512) {
       cnpy::npz_t npz = cnpy::npz_load(dataFilePath);
       beta_ = vhop::utility::loadDoubleMatrix(npz.at("betas"), vhop::SHAPE_BASIS_DIM, 1);
   }
 
-  ReprojectionErrorVPoser(
+  ReProjectionErrorVPoser(
       vhop::beta_t<double> beta,
       const VPoser& vposer,
       Eigen::Matrix3d K,
@@ -53,7 +53,7 @@ class ReprojectionErrorVPoser : public vhop::RPEResidualBase {
       return vposer::latent_t<double>::Zero();
   }
 
-  void convert2SMPL(const Eigen::VectorXd& z, beta_t<double>& beta, theta_t<double> theta) override {
+  void convert2SMPL(const Eigen::VectorXd& z, beta_t<double>& beta, theta_t<double>& theta) override {
       beta = beta_;
       vhop::rotMats_t<double> rotMats = vposer_.decode(z, true);
       for(int i = 0; i < rotMats.size(); i++) {

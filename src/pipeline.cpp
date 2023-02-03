@@ -6,9 +6,9 @@
 #include "vhop/ceres/rpe_vposer.h"
 
 
-vhop::Pipeline::Pipeline(vhop::SMPL smpl, ceres::Solver::Options solverOptions, bool verbose)
-: smpl_model_(smpl),
-  ceres_options_(solverOptions),
+vhop::Pipeline::Pipeline(vhop::SMPL  smpl, ceres::Solver::Options solverOptions, bool verbose)
+: smpl_model_(std::move(smpl)),
+  ceres_options_(std::move(solverOptions)),
   verbose_(verbose) {}
 
 bool vhop::Pipeline::process(const std::string &filePath,
@@ -21,25 +21,13 @@ bool vhop::Pipeline::process(const std::string &filePath,
     problemOptions.manifold_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;
     ceres::Problem problem(problemOptions);
 
-    ceres::CostFunction *costFunction;
-    auto *cost = new vhop::ReprojectionErrorSMPL(filePath, smpl_model_);
-    constexpr int numParams = vhop::ReprojectionErrorSMPL::getNumParams();
-    constexpr int numResiduals = vhop::ReprojectionErrorSMPL::getNumResiduals();
-    costFunction = new ceres::NumericDiffCostFunction<
-        vhop::ReprojectionErrorSMPL, ceres::CENTRAL, numResiduals, numParams>(cost);
-
-    ceres::LossFunction* lossFunction = new ceres::CauchyLoss(1.0);
-    Eigen::VectorXd x0 = cost->x0();
-    problem.AddResidualBlock(costFunction, lossFunction, x0.data());
-
-//    vhop::RPEResidualBase *cost;
-//    Eigen::VectorXd x0;
-//    ceres::LossFunction *lossFunction;
-//    if (!addReprojectionCostFunction(filePath, method, &cost, &lossFunction, x0, problem)) {
-//        std::cout << "Failed to add reprojection cost function" << std::endl;
-//        return false;
-//    }
-    std::cout << "x0: " << x0.transpose() << std::endl;
+    vhop::RPEResidualBase *cost;
+    Eigen::VectorXd x0;
+    ceres::LossFunction *lossFunction;
+    if (!addReProjectionCostFunction(filePath, method, &cost, &lossFunction, x0, problem)) {
+        std::cout << "Failed to add reprojection cost function" << std::endl;
+        return false;
+    }
 
     ceres::Solver::Summary summary;
     ceres::Solve(ceres_options_, &problem, &summary);
@@ -58,34 +46,34 @@ bool vhop::Pipeline::process(const std::string &filePath,
     return true;
 }
 
-bool vhop::Pipeline::addReprojectionCostFunction(const std::string &filePath,
+bool vhop::Pipeline::addReProjectionCostFunction(const std::string &filePath,
                                                  const vhop::Methods &method,
                                                  vhop::RPEResidualBase **cost,
                                                  ceres::LossFunction **lossFunction,
                                                  Eigen::VectorXd &x0,
                                                  ceres::Problem &problem) const {
-//    ceres::CostFunction *costFunction;
-//    if(method == vhop::Methods::smplx) {
-//        auto *costPtr = new vhop::ReprojectionErrorSMPL(filePath, smpl_model_);
-//        *cost = costPtr;
-//        constexpr int numParams = vhop::ReprojectionErrorSMPL::getNumParams();
-//        constexpr int numResiduals = vhop::ReprojectionErrorSMPL::getNumResiduals();
-//        costFunction = new ceres::NumericDiffCostFunction<
-//            vhop::ReprojectionErrorSMPL, ceres::CENTRAL, numResiduals, numParams>(costPtr);
-//    } else if(method == vhop::Methods::vposerx) {
-//        auto *costPtr = new vhop::ReprojectionErrorVPoser(filePath, smpl_model_);
-//        *cost = costPtr;
-//        constexpr int numParams = vhop::ReprojectionErrorVPoser::getNumParams();
-//        constexpr int numResiduals = vhop::ReprojectionErrorVPoser::getNumResiduals();
-//        costFunction = new ceres::NumericDiffCostFunction<
-//            vhop::ReprojectionErrorVPoser, ceres::CENTRAL, numResiduals, numParams>(costPtr);
-//    } else {
-//        std::cout << "Unknown method " << method << std::endl;
-//        return false;
-//    }
-//
-//    *lossFunction = new ceres::CauchyLoss(1.0);
-//    x0 = (*cost)->x0();
-//    problem.AddResidualBlock(costFunction, *lossFunction, x0.data());
+    ceres::CostFunction *costFunction;
+    if(method == vhop::Methods::smplx) {
+        auto *costPtr = new vhop::ReProjectionErrorSMPL(filePath, smpl_model_);
+        *cost = costPtr;
+        constexpr int numParams = vhop::ReProjectionErrorSMPL::getNumParams();
+        constexpr int numResiduals = vhop::ReProjectionErrorSMPL::getNumResiduals();
+        costFunction = new ceres::NumericDiffCostFunction<
+            vhop::ReProjectionErrorSMPL, ceres::CENTRAL, numResiduals, numParams>(costPtr);
+    } else if(method == vhop::Methods::vposerx) {
+        auto *costPtr = new vhop::ReProjectionErrorVPoser(filePath, smpl_model_);
+        *cost = costPtr;
+        constexpr int numParams = vhop::ReProjectionErrorVPoser::getNumParams();
+        constexpr int numResiduals = vhop::ReProjectionErrorVPoser::getNumResiduals();
+        costFunction = new ceres::NumericDiffCostFunction<
+            vhop::ReProjectionErrorVPoser, ceres::CENTRAL, numResiduals, numParams>(costPtr);
+    } else {
+        std::cout << "Unknown method " << method << std::endl;
+        return false;
+    }
+
+    *lossFunction = new ceres::CauchyLoss(1.0);
+    x0 = (*cost)->x0();
+    problem.AddResidualBlock(costFunction, *lossFunction, x0.data());
     return true;
 }
