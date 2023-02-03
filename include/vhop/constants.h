@@ -45,8 +45,6 @@ using joint_op_scores_t = Eigen::Matrix<double, JOINT_NUM_OP, 1>;
 template<typename T>
 using vertex_t = Eigen::Matrix<T, JOINT_NUM_EXTRA * 3, 1>;
 
-enum Methods { smplx, vposerx };
-
 
 } // namespace vhop
 

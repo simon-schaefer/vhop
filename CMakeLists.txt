@@ -38,7 +38,6 @@ add_library(${PROJECT_NAME}
     src/LeakyRelu.cpp
     src/Linear.cpp
     src/VPoser.cpp
-    src/pipeline.cpp
     ${CNPY_SOURCES}
 )
 target_link_libraries(${PROJECT_NAME}

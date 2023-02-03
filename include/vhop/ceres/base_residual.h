@@ -14,7 +14,6 @@ public:
     virtual ~ResidualBase() = default;
 
     virtual bool operator()(const double *params, double *residuals) const = 0;
-    virtual Eigen::VectorXd x0() = 0;
 };
 
 }

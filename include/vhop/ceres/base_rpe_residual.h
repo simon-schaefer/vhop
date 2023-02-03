@@ -35,6 +35,7 @@ public:
     };
 
     virtual void convert2SMPL(const Eigen::VectorXd& z, beta_t<double>& beta, theta_t<double>& theta) = 0;
+    virtual Eigen::VectorXd x0() = 0;
 
     bool drawReProjections(const Eigen::VectorXd& z, const std::string& imagePath, const std::string& outputImagePath) {
         beta_t<double> beta;

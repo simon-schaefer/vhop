@@ -43,7 +43,7 @@ class ReProjectionErrorSMPL : public vhop::RPEResidualBase {
 
   Eigen::VectorXd x0() override {
       // cnpy::npz_t npz_means = cnpy::npz_load("../data/vposer_mean.npz");
-      return vhop::theta_t<double>::Zero();
+      return vhop::theta_t<double>::Ones();
   }
 
   void convert2SMPL(const Eigen::VectorXd& z, beta_t<double>& beta, theta_t<double>& theta) override {
