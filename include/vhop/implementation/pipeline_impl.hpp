@@ -38,7 +38,8 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::process(
   std::vector<vhop::RPEResidualBase*> costs;
   for(int t = 0; t < numTimeSteps; ++t) {
      vhop::RPEResidualBase* cost;
-     if(!addReProjectionCostFunction(filePaths[t], &cost, x0 + t*numParams,problem)) {
+     const size_t offset = t * RPEResidualClass::getNumParams();
+     if(!addReProjectionCostFunction(filePaths[t], offset, &cost, x0,problem)) {
       std::cout << "Failed to add re-projection cost function" << std::endl;
       return false;
     }
@@ -95,15 +96,16 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::process(
 template<typename RPEResidualClass, size_t numTimeSteps>
 bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::addReProjectionCostFunction(
     const std::string &filePath,
+    const size_t offset,
     vhop::RPEResidualBase **cost,
     double* x0,
     ceres::Problem &problem) const {
-  auto *costPtr = new RPEResidualClass(filePath, smpl_model_);
+  auto *costPtr = new RPEResidualClass(filePath, smpl_model_, offset);
   *cost = costPtr;
-  constexpr int numParams = vhop::ReProjectionErrorSMPL::getNumParams();
-  constexpr int numResiduals = vhop::ReProjectionErrorSMPL::getNumResiduals();
+  constexpr int numParams = RPEResidualClass::getNumParams() * numTimeSteps;
+  constexpr int numResiduals = RPEResidualClass::getNumResiduals();
   ceres::CostFunction *costFunction = new ceres::NumericDiffCostFunction<
-      vhop::ReProjectionErrorSMPL, ceres::CENTRAL, numResiduals, numParams>(costPtr);
+      RPEResidualClass, ceres::CENTRAL, numResiduals, numParams>(costPtr);
 
   ceres::LossFunction *lossFunction = new ceres::CauchyLoss(1.0);
   Eigen::VectorXd x0_eigen = (*cost)->x0();
@@ -123,8 +125,12 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::addConstantVelocityCostFunc
   constexpr int numParamsPerT = RPEResidualClass::getNumParams();
   auto *cost = new vhop::ConstantMotionError<numParamsPerT, numTimeSteps>();
 
-  constexpr int numResiduals = vhop::ConstantMotionError<numParamsPerT, numTimeSteps>::getNumResiduals();
-  constexpr int numParams = vhop::ConstantMotionError<numParamsPerT, numTimeSteps>::getNumParams();
+  // Ceres requires a cost function with residuals > 0 during compile time. Therefore, we hack
+  // it by adding at least one residual, even if the function is not actually called in this case.
+  constexpr int numResiduals = std::max(vhop::ConstantMotionError<numParamsPerT, numTimeSteps>::getNumResiduals(), 1);
+  constexpr int numParams = RPEResidualClass::getNumParams() * numTimeSteps;
+  static_assert(numParams == vhop::ConstantMotionError<numParamsPerT, numTimeSteps>::getNumParams(),
+                "Non-Matching parameters of motion residual and re-projection residual blocks");
   ceres::CostFunction *costFunction = new ceres::NumericDiffCostFunction<
       vhop::ConstantMotionError<numParamsPerT, numTimeSteps>, ceres::CENTRAL, numResiduals, numParams>(cost);
 

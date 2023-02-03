@@ -14,19 +14,8 @@ namespace vhop {
 class RPEResidualBase : public ResidualBase {
 
 public:
-    RPEResidualBase(
-        vhop::SMPL smpl_model,
-        Eigen::Matrix3d K,
-        Eigen::Matrix4d T_C_B,
-        vhop::joint_op_2d_t<double> joint_kps,
-        vhop::joint_op_scores_t kp_scores)
-        : smpl_model_(std::move(smpl_model)),
-          K_(std::move(K)),
-          T_C_B_(std::move(T_C_B)),
-          joint_kps_(std::move(joint_kps)),
-          joint_kps_scores_(std::move(kp_scores)){};
-
-    RPEResidualBase(const std::string& dataFilePath, vhop::SMPL smpl_model) : smpl_model_(std::move(smpl_model)) {
+    RPEResidualBase(const std::string& dataFilePath, vhop::SMPL smpl_model, size_t offset = 0)
+    : smpl_model_(std::move(smpl_model)), offset_(offset) {
       cnpy::npz_t npz = cnpy::npz_load(dataFilePath);
       K_ = vhop::utility::loadDoubleMatrix(npz.at("intrinsics"), 3, 3);
       T_C_B_ = vhop::utility::loadDoubleMatrix(npz.at("T_C_B"), 4, 4);
@@ -54,6 +43,8 @@ public:
 
 protected:
     vhop::SMPL smpl_model_;
+    size_t offset_ = 0;  // parameter block offset
+
     Eigen::Matrix3d K_;
     Eigen::Matrix4d T_C_B_;
     vhop::joint_op_2d_t<double> joint_kps_;

@@ -12,30 +12,15 @@ class ReProjectionErrorVPoser : public vhop::RPEResidualBase {
 
  public:
 
-  ReProjectionErrorVPoser(const std::string &dataFilePath, const vhop::SMPL &smpl_model)
-      : RPEResidualBase(dataFilePath, smpl_model), vposer_("../data/vposer_weights.npz", 512) {
+  ReProjectionErrorVPoser(const std::string &dataFilePath, const vhop::SMPL &smpl_model, size_t offset = 0)
+      : RPEResidualBase(dataFilePath, smpl_model, offset),
+      vposer_("../data/vposer_weights.npz", 512) {
       cnpy::npz_t npz = cnpy::npz_load(dataFilePath);
       beta_ = vhop::utility::loadDoubleMatrix(npz.at("betas"), vhop::SHAPE_BASIS_DIM, 1);
   }
 
-  ReProjectionErrorVPoser(
-      vhop::beta_t<double> beta,
-      const VPoser& vposer,
-      Eigen::Matrix3d K,
-      Eigen::Matrix4d T_C_B,
-      vhop::joint_op_2d_t<double> joint_kps,
-      vhop::joint_op_scores_t kp_scores,
-      vhop::SMPL smpl_model)
-      : RPEResidualBase(std::move(smpl_model),
-                        std::move(K),
-                        std::move(T_C_B),
-                        std::move(joint_kps),
-                        std::move(kp_scores)),
-      beta_(std::move(beta)),
-      vposer_(vposer) {}
-
   bool operator()(const double *latentZ, double *reprojection_error) const override {
-      vposer::latent_t<double> z(latentZ);
+      vposer::latent_t<double> z(latentZ + offset_);
       vhop::rotMats_t<double> rotMats = vposer_.decode(z, true);
 
       vhop::joint_op_2d_t<double> joints2d;

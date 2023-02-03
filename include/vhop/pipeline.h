@@ -22,6 +22,7 @@ public:
 
 protected:
     [[nodiscard]] bool addReProjectionCostFunction(const std::string &filePath,
+                                                   const size_t offset,
                                                    vhop::RPEResidualBase **cost,
                                                    double* x0,
                                                    ceres::Problem &problem) const;
