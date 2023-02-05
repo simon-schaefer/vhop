@@ -197,8 +197,9 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::addReProjectionCostFunction
 
   ceres::LossFunction *lossFunction = new ceres::CauchyLoss(1.0);
   Eigen::VectorXd x0_eigen = (*cost)->x0();
-  for(int i = 0; i < numParams; i++)
-    x0[i] = x0_eigen[i];
+  for(int i = 0; i < RPEResidualClass::getNumParams(); i++) {
+    x0[i + offset] = x0_eigen[i];
+  }
   problem.AddResidualBlock(costFunction, lossFunction, x0);
   return true;
 }
