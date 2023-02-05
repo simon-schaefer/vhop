@@ -8,12 +8,16 @@
 #include <vector>
 
 
-std::vector<std::filesystem::path> vhop::utility::listFilesRecursively(const std::string& directory,
-                                                                       const std::string& suffix) {
+std::vector<std::filesystem::path> vhop::utility::listFiles(const std::string& directory,
+                                                            const std::string& suffix,
+                                                            bool recursive) {
     std::vector<std::filesystem::path> outputs;
+    const std::filesystem::path dir(directory);
+
     for(const auto& file : std::filesystem::recursive_directory_iterator(directory)) {
         const auto &filePath = file.path();
-        if (filePath.extension() != ".npz") continue;
+        if (filePath.extension() != suffix) continue;
+        if (!recursive && !std::filesystem::equivalent(filePath.parent_path(), dir)) continue;
         outputs.emplace_back(filePath);
     }
     return outputs;
@@ -71,14 +75,16 @@ void vhop::utility::writeVector(const std::string& filename, const std::vector<d
 
 void vhop::utility::writeSMPLParameters(const std::string& filePath,
                                         const vhop::beta_t<double>& beta,
-                                        const vhop::theta_t<double>& theta) {
-    std::vector<double> outputs(vhop::SHAPE_BASIS_DIM + vhop::THETA_DIM);
+                                        const vhop::theta_t<double>& theta,
+                                        const double& executionTime) {
+    std::vector<double> outputs(vhop::SHAPE_BASIS_DIM + vhop::THETA_DIM + 1);
     for(int i = 0; i < vhop::SHAPE_BASIS_DIM; i++) {
         outputs[i] = beta(i);
     }
     for(int i = 0; i < vhop::THETA_DIM; i++) {
         outputs[i + SHAPE_BASIS_DIM] = theta(i);
     }
+    outputs[vhop::SHAPE_BASIS_DIM + vhop::THETA_DIM] = executionTime;
     writeVector(filePath, outputs);
 }
 

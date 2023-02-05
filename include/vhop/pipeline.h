@@ -16,13 +16,16 @@ public:
                                const std::vector<std::string> &outputPaths,
                                const std::vector<std::string> &imagePaths = std::vector<std::string>()) const;
 
-  [[nodiscard]] bool process(const std::string &filePath,
-                             const std::string &outputPath,
-                             const std::string &imagePath = "") const;
+    [[nodiscard]] bool process(const std::string &filePath,
+                               const std::string &outputPath,
+                               const std::string &imagePath = "") const;
+
+  [[nodiscard]] bool processDirectory(const std::string &directory,
+                                      const std::string &outputDirectory) const;
 
 protected:
     [[nodiscard]] bool addReProjectionCostFunction(const std::string &filePath,
-                                                   const size_t offset,
+                                                   size_t offset,
                                                    vhop::RPEResidualBase **cost,
                                                    double* x0,
                                                    ceres::Problem &problem) const;

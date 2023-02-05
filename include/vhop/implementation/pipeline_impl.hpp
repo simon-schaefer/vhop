@@ -1,6 +1,7 @@
 #ifndef VHOP_INCLUDE_VHOP_PIPELINE_IMPL_HPP_
 #define VHOP_INCLUDE_VHOP_PIPELINE_IMPL_HPP_
 
+#include <chrono>
 #include <utility>
 
 #include "vhop/pipeline.h"
@@ -16,7 +17,11 @@ vhop::Pipeline<RPEResidualClass, numTimeSteps>::Pipeline(vhop::SMPL smpl,
                                                            bool verbose)
     : smpl_model_(std::move(smpl)),
       ceres_options_(std::move(solverOptions)),
-      verbose_(verbose) {}
+      verbose_(verbose) {
+  static_assert(std::is_base_of_v<RPEResidualBase, RPEResidualClass>,
+      "Pipeline RPEResidualClass template parameter must be derived from RPEResidualBase");
+  static_assert(numTimeSteps > 0, "Pipeline numTimeSteps template parameter must be greater than 0");
+}
 
 template<typename RPEResidualClass, size_t numTimeSteps>
 bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::process(
@@ -55,8 +60,14 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::process(
 
   // Solve the optimization problem.
   ceres::Solver::Summary summary;
+  auto start = std::chrono::steady_clock::now();
   ceres::Solve(ceres_options_, &problem, &summary);
-  if (verbose_) std::cout << summary.FullReport() << std::endl;
+  auto end = std::chrono::steady_clock::now();
+  auto executionTime = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
+  if (verbose_) {
+    std::cout << summary.BriefReport() << std::endl;
+    std::cout << "... optimization finished in " << executionTime <<" milliseconds" << std::endl;
+  }
 
   // Write the results to several files.
   Eigen::Vector<double, numParams> x_sol(x0);
@@ -65,7 +76,7 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::process(
     vhop::beta_t<double> beta;
     vhop::theta_t<double> theta;
     costs[t]->convert2SMPL(x_sol_t, beta, theta);
-    vhop::utility::writeSMPLParameters(outputPaths[t], beta, theta);
+    vhop::utility::writeSMPLParameters(outputPaths[t], beta, theta, (double)executionTime);
     if(!imagePaths.empty()) {
       costs[t]->drawReProjections(x_sol_t, imagePaths[t], outputPaths[t] + ".png");
     }
@@ -91,6 +102,74 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::process(
     imagePaths.push_back(imagePath);
   }
   return process(filePaths, outputPaths, imagePaths);
+}
+
+template<typename RPEResidualClass, size_t numTimeSteps>
+bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::processDirectory(
+    const std::string &directory,
+    const std::string &outputDirectory) const {
+  const std::filesystem::path outputDir(outputDirectory);
+  const std::filesystem::path dir(directory);
+  std::filesystem::create_directories(outputDirectory);
+  const auto files = vhop::utility::listFiles(directory, ".npz", false);
+  if(files.empty()) {
+    std::cout << "No files found in " << directory << std::endl;
+    return false;
+  }
+
+  int i = 1;
+  for(const auto& filePath : files) {
+    std::cout << "Processing " << filePath << " [" << i << "/" << files.size() << "]" << std::endl;
+    i++;
+    if(i > 3) break;
+
+    const std::string fileName = filePath.stem().c_str();
+    if (numTimeSteps == 1) {
+      const std::string imageFilePath = (dir / (fileName + ".jpg")).c_str();
+      const std::string outputFilePath = (outputDir / (fileName +".bin")).c_str();
+      bool success = process(filePath, outputFilePath, imageFilePath);
+      if(!success) {
+        std::cout << "... failed to process " << filePath << std::endl;
+      }
+    } else {
+      std::vector<std::string> filePaths, outputPaths, imagePaths;
+      const std::filesystem::path outputDir_i(outputDir / fileName);
+      std::filesystem::create_directories(outputDir_i);
+
+      // Find the remaining files, if they do not exist, then skip the whole sequence.
+      const int fileIndex = std::stoi(fileName);
+      bool loaded = true;
+      for(int t = 1; t < numTimeSteps; t++) {
+        const std::string filePath_t = (dir / (std::to_string(fileIndex + t) + ".npz")).c_str();
+        const std::string outputFilePath = (outputDir_i / (std::to_string(fileIndex + t) + ".bin")).c_str();
+        const std::string imageFilePath = (dir / (std::to_string(fileIndex + t) + ".jpg")).c_str();
+
+        std::cout << filePath << " " << filePath_t << std::endl;
+
+        // Check if the file exists. If not, we skip the rest of the files and continue with the next one.
+        if(!std::filesystem::exists(filePath_t) || !std::filesystem::exists(imageFilePath)) {
+          loaded = false;
+          break;
+        }
+
+        // Otherwise push the remaining files to the list.
+        filePaths.push_back(filePath_t);
+        outputPaths.push_back(outputFilePath);
+        imagePaths.push_back(imageFilePath);
+      }
+      if(!loaded) {
+        std::cout << "... failed to load all files for " << filePath << std::endl;
+        continue;
+      }
+
+      // Process the sequence.
+      bool success = process(filePaths, outputPaths, imagePaths);
+      if(!success) {
+        std::cout << "... failed to process " << filePath << std::endl;
+      }
+    }
+  }
+  return true;
 }
 
 template<typename RPEResidualClass, size_t numTimeSteps>

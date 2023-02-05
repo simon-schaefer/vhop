@@ -7,7 +7,6 @@
 TEST(TestPipeline, TestSingleImage) {
     ceres::Solver::Options ceres_options;
     ceres_options.max_num_iterations = 10;
-
     vhop::SMPL smpl_model("../data/smpl_neutral.npz");
     vhop::Pipeline<vhop::ReProjectionErrorSMPL, 1> pipeline(smpl_model, ceres_options);
 
@@ -21,8 +20,6 @@ TEST(TestPipeline, TestSingleImage) {
 TEST(TestPipeline, TestTwoImages) {
   ceres::Solver::Options ceres_options;
   ceres_options.max_num_iterations = 40;
-  ceres_options.minimizer_progress_to_stdout = true;
-
   vhop::SMPL smpl_model("../data/smpl_neutral.npz");
   vhop::Pipeline<vhop::ReProjectionErrorSMPL, 2> pipeline(smpl_model, ceres_options);
 

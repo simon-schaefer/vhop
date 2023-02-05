@@ -13,9 +13,11 @@ namespace vhop::utility {
  * List all files in a directory recursively with a given suffix.
  * @param directory Directory path.
  * @param suffix file suffix, files with other suffix are omitted.
+ * @param recursive Whether to list files recursively.
  */
-std::vector<std::filesystem::path> listFilesRecursively(const std::string& directory,
-                                                        const std::string& suffix);
+std::vector<std::filesystem::path> listFiles(const std::string& directory,
+                                             const std::string& suffix,
+                                             bool recursive = false);
 
 /**
  * @brief Load one dimension of a 3D numpy array from a npz file.
@@ -50,10 +52,12 @@ void writeVector(const std::string& filePath, const std::vector<double>& myVecto
  * @brief Write SMPL parameters to a binary file.
  * @param beta SMPL shape parameters (10,).
  * @param theta SMPL pose parameters (72,).
+ * @param executionTime Execution time in seconds.
  */
 void writeSMPLParameters(const std::string& filePath,
                          const vhop::beta_t<double>& beta,
-                         const vhop::theta_t<double>& theta);
+                         const vhop::theta_t<double>& theta,
+                         const double& executionTime = -1.0);
 
 /**
  * @brief Rodrigues' formula for rotation matrix from axis-angle representation.
