@@ -5,10 +5,8 @@
 # Data directory.
 data/test/**/*.png
 data/test/**/*.bin
-data/results/*.png
-data/results/*.bin
-data/results/smpl/
-data/results/vposer/
+data/results/**/*.bin
+data/results/**/*.png
 data/zju-mocap/CoreView_*
 
 # build directory

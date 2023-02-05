@@ -121,7 +121,6 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::processDirectory(
   for(const auto& filePath : files) {
     std::cout << "Processing " << filePath << " [" << i << "/" << files.size() << "]" << std::endl;
     i++;
-    if(i > 3) break;
 
     const std::string fileName = filePath.stem().c_str();
     if (numTimeSteps == 1) {
@@ -139,12 +138,15 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::processDirectory(
       // Find the remaining files, if they do not exist, then skip the whole sequence.
       const int fileIndex = std::stoi(fileName);
       bool loaded = true;
-      for(int t = 1; t < numTimeSteps; t++) {
-        const std::string filePath_t = (dir / (std::to_string(fileIndex + t) + ".npz")).c_str();
-        const std::string outputFilePath = (outputDir_i / (std::to_string(fileIndex + t) + ".bin")).c_str();
-        const std::string imageFilePath = (dir / (std::to_string(fileIndex + t) + ".jpg")).c_str();
-
-        std::cout << filePath << " " << filePath_t << std::endl;
+      for(int t = 0; t < numTimeSteps; t++) {
+        // Get name of subsequent file, note that the numbers are zero padded to a length of 6.
+        std::stringstream ss;
+        ss << std::setw(6) << std::setfill('0') << fileIndex + t;
+        std::string fileName_t = ss.str();
+        // Get the file paths of the data, output and image files.
+        const std::string filePath_t = (dir / (fileName_t + ".npz")).c_str();
+        const std::string outputFilePath = (outputDir_i / (fileName_t + ".bin")).c_str();
+        const std::string imageFilePath = (dir / (fileName_t + ".jpg")).c_str();
 
         // Check if the file exists. If not, we skip the rest of the files and continue with the next one.
         if(!std::filesystem::exists(filePath_t) || !std::filesystem::exists(imageFilePath)) {
