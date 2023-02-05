@@ -14,7 +14,7 @@
  */
 
 TEST(TestVPoser, TestLinearLayer){
-    cnpy::npz_t npz = cnpy::npz_load("../data/test/linear_layer.npz");
+    cnpy::npz_t npz = cnpy::npz_load("../data/test/vposer/linear_layer.npz");
     Eigen::Vector<double, 3> z = vhop::utility::loadDoubleMatrix(npz.at("z"), 3, 1);
     Linear l1 = Linear(3, 2, npz, "layer");
 
@@ -24,7 +24,7 @@ TEST(TestVPoser, TestLinearLayer){
 }
 
 TEST(TestVPoser, TestBatchNorm){
-    cnpy::npz_t npz = cnpy::npz_load("../data/test/batch_norm.npz");
+    cnpy::npz_t npz = cnpy::npz_load("../data/test/vposer/batch_norm.npz");
     Eigen::Vector<double, 20> z = vhop::utility::loadDoubleMatrix(npz.at("z"), 20, 1);
     BatchNorm l1 = BatchNorm(20, npz, "layer");
 
@@ -34,7 +34,7 @@ TEST(TestVPoser, TestBatchNorm){
 }
 
 TEST(TestVPoser, TestLeakyRelu){
-    cnpy::npz_t npz = cnpy::npz_load("../data/test/leaky_relu.npz");
+    cnpy::npz_t npz = cnpy::npz_load("../data/test/vposer/leaky_relu.npz");
     Eigen::Vector<double, 20> z = vhop::utility::loadDoubleMatrix(npz.at("z"), 20, 1);
     LeakyRelu l1 = LeakyRelu(0.2);
 
@@ -45,7 +45,7 @@ TEST(TestVPoser, TestLeakyRelu){
 
 TEST(TestVPoser, TestForward){
     VPoser vposer = VPoser("../data/vposer_weights.npz", 512);
-    cnpy::npz_t npz = cnpy::npz_load("../data/test/vposer_data.npz");
+    cnpy::npz_t npz = cnpy::npz_load("../data/test/vposer/vposer_data.npz");
     vposer::latent_t<double> z = vhop::utility::loadDoubleMatrix(npz.at("z"), vposer::LATENT_DIM, 1);
 
     vhop::AlignedVector<Eigen::Matrix3d> rotMats = vposer.decode(z, false);

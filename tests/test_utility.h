@@ -18,7 +18,7 @@ TEST(TestUtility, TestRodriguez) {
 }
 
 TEST(TestUtility, TestLoadDoubleMatrix) {
-    cnpy::npz_t npz = cnpy::npz_load("../data/test/reading.npz");
+    cnpy::npz_t npz = cnpy::npz_load("../data/test/utility/reading.npz");
     const cnpy::NpyArray& fooMatrix = npz.at("a");
     Eigen::MatrixXd m = vhop::utility::loadDoubleMatrix(fooMatrix, 3, 2);
     Eigen::MatrixXd expectedMatrix(3, 2);
