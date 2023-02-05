@@ -14,11 +14,13 @@ from typing import Tuple
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("data", type=pathlib.Path, help="Path starting from zju-mocap dataset directory.")
+    parser.add_argument("--method", type=str, default="smpl")
     parser.add_argument("--smpl-model-file", type=pathlib.Path, default="../../models/smpl/smpl_pkl/SMPL_NEUTRAL.pkl")
     return parser.parse_args()
 
 
-def compute_smpl_vertices(smpl_model: smplx.SMPL, betas: np.ndarray, thetas: np.ndarray, T: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def compute_smpl_vertices(smpl_model: smplx.SMPL, betas: np.ndarray, thetas: np.ndarray, T: np.ndarray
+                          ) -> Tuple[np.ndarray, np.ndarray]:
     betas_t = torch.tensor(betas, dtype=torch.float32).view(1, 10)
     thetas_t = torch.tensor(thetas, dtype=torch.float32).view(1, 72)
     smpl_output = smpl_model.forward(betas_t, thetas_t[:, 3:], global_orient=thetas_t[:, :3])
@@ -31,9 +33,9 @@ def compute_smpl_vertices(smpl_model: smplx.SMPL, betas: np.ndarray, thetas: np.
     return joints, vertices
 
 
-def load_data_and_results(data_file: pathlib.Path):
+def load_data_and_results(data_file: pathlib.Path, method: str):
     data = np.load(data_file.as_posix(), allow_pickle=True)
-    results_file = pathlib.Path("results") / data_file.relative_to("zju-mocap")
+    results_file = pathlib.Path("results") / method / data_file.relative_to("zju-mocap")
     results_file = results_file.with_suffix(".bin")
     if results_file.exists():
         data_hat = np.fromfile(results_file)
@@ -42,8 +44,8 @@ def load_data_and_results(data_file: pathlib.Path):
     return data, data_hat
 
 
-def visualize_sample(data_file: pathlib.Path, smpl_model: smplx.SMPL):
-    data, data_hat = load_data_and_results(data_file)
+def visualize_sample(data_file: pathlib.Path, method: str, smpl_model: smplx.SMPL):
+    data, data_hat = load_data_and_results(data_file, method=method)
 
     scene = balanna.trimesh.show_axis(np.eye(4))  # camera frame
     _, vertices_gt = compute_smpl_vertices(smpl_model, data["betas"], data["thetas"], data["T_C_B"])
@@ -57,7 +59,7 @@ def visualize_sample(data_file: pathlib.Path, smpl_model: smplx.SMPL):
     image = np.swapaxes(np.swapaxes(image, 0, 2), 1, 2)  # HWC to CHW
 
     if data_hat is not None:
-        _, vertices_hat = compute_smpl_vertices(smpl_model, data_hat[:10], data_hat[10:], data["T_C_B"])
+        _, vertices_hat = compute_smpl_vertices(smpl_model, data_hat[:10], data_hat[10:82], data["T_C_B"])
         scene = balanna.trimesh.show_point_cloud(vertices_hat, colors=(255, 0, 0), scene=scene)
 
     return {"scene": scene, "image": image}
@@ -71,10 +73,10 @@ def main():
     if data_path.is_dir():
         files = sorted(list(data_path.glob("**/*.npz")))
         for data_file in files:
-            yield visualize_sample(data_file, smpl_model)
+            yield visualize_sample(data_file, args.method, smpl_model)
     else:
         for _ in range(10):
-            yield visualize_sample(data_path, smpl_model)
+            yield visualize_sample(data_path, args.method, smpl_model)
 
 
 if __name__ == "__main__":
