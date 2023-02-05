@@ -3,8 +3,25 @@
 #include <cnpy.h>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <Eigen/Dense>
+#include <vector>
 
+
+std::vector<std::filesystem::path> vhop::utility::listFiles(const std::string& directory,
+                                                            const std::string& suffix,
+                                                            bool recursive) {
+    std::vector<std::filesystem::path> outputs;
+    const std::filesystem::path dir(directory);
+
+    for(const auto& file : std::filesystem::recursive_directory_iterator(directory)) {
+        const auto &filePath = file.path();
+        if (filePath.extension() != suffix) continue;
+        if (!recursive && !std::filesystem::equivalent(filePath.parent_path(), dir)) continue;
+        outputs.emplace_back(filePath);
+    }
+    return outputs;
+}
 
 Eigen::MatrixXd vhop::utility::loadDoubleMatrix3D(const cnpy::NpyArray& raw, int r, int c, int dim) {
     std::vector<double> dataVector;
@@ -34,94 +51,41 @@ Eigen::MatrixXd vhop::utility::loadDoubleMatrix(const cnpy::NpyArray &raw, int r
     return out;
 }
 
-
-Eigen::VectorXd vhop::utility::loadVector(const std::string& filePath, int row){
-    std::ifstream fin(filePath);
-
-    if(!fin){
-        std::cout << "Error: unable to read txt file: " << filePath << std::endl;
-    }
-
-    int r = 0; int c = 0;
-    std::string line;
-
-    // Read first line which contains dimensions of the matrix
-    std::getline(fin, line);
-    size_t pos;
-
-    int vector_dim = stoi(line);
-    // std::cout << "Reading a vector with " <<  vector_dim << " dimension" << std::endl;
-
-    Eigen::MatrixXd out = Eigen::VectorXd::Zero(vector_dim);
-    while (getline(fin, line)) {
-        std::string token;
-        while((pos = line.find('\t')) != std::string::npos){
-            token = line.substr(0, pos);
-
-            out(c) = stod(token);
-            line.erase(0, pos + 1);
-            c += 1;
-            if(c== vector_dim) break;
-        }
-        if (!line.empty()){
-            out(c) = stod(line);
-        }
-    }
-    fin.close();
-
-    if(out.rows() != row){
-        throw std::invalid_argument( "loadded weight parameter dimension does not match with the weights" );
-    }
-
-    return out;
+// Implementation from https://stackoverflow.com/questions/46663046/save-read-double-vector-from-file-c
+std::vector<double> vhop::utility::loadVector(const std::string& filePath) {
+    std::vector<char> buffer{};
+    std::ifstream ifs(filePath, std::ios::in | std::ifstream::binary);
+    std::istreambuf_iterator<char> iter(ifs);
+    std::istreambuf_iterator<char> end{};
+    std::copy(iter, end, std::back_inserter(buffer));
+    std::vector<double> newVector(buffer.size() / sizeof(double));
+    memcpy(&newVector[0], &buffer[0], buffer.size());
+    return newVector;
 }
 
-Eigen::MatrixXd vhop::utility::loadDoubleMatrix(const std::string& filePath, int row, int col) {
+// Implementation from https://stackoverflow.com/questions/46663046/save-read-double-vector-from-file-c
+void vhop::utility::writeVector(const std::string& filename, const std::vector<double>& myVector) {
+    std::ofstream ofs(filename, std::ios::out | std::ofstream::binary);
+    std::ostream_iterator<char> osi{ ofs };
+    const char* beginByte = (char*)&myVector[0];
 
-    std::ifstream fin(filePath);
+    const char* endByte = (char*)&myVector.back() + sizeof(double);
+    std::copy(beginByte, endByte, osi);
+}
 
-    if(!fin){
-        std::cout << "Error: unable to read txt file: " << filePath << std::endl;
+void vhop::utility::writeSMPLParameters(const std::string& filePath,
+                                        const vhop::beta_t<double>& beta,
+                                        const vhop::theta_t<double>& theta,
+                                        const double& executionTime) {
+    std::vector<double> outputs(vhop::SHAPE_BASIS_DIM + vhop::THETA_DIM + 1);
+    for(int i = 0; i < vhop::SHAPE_BASIS_DIM; i++) {
+        outputs[i] = beta(i);
     }
-
-    int r = 0; int c = 0;
-    std::string line;
-
-    // Read first line which contains dimensions of the matrix
-    std::getline(fin, line);
-    size_t pos = line.find('\t');
-
-    std::string str_dim1 = line.substr(0, pos);
-    int dim1 = std::stoi(str_dim1);
-    std::string str_dim2 = line.substr(pos+1);
-    int dim2 = std::stoi(str_dim2);
-    // std::cout << "Reading a vector with the dimension(" <<  dim1 << ", "<< dim2 << ")" << std::endl;
-
-    Eigen::MatrixXd out = Eigen::MatrixXd::Zero(dim1, dim2);
-    while (getline(fin, line)) {
-        std::string token;
-        while((pos = line.find('\t')) != std::string::npos){
-            token = line.substr(0, pos);
-
-            out(r,c) = stod(token);
-            line.erase(0, pos + 1);
-            c++;
-            if(c == dim2){
-                break;
-            }
-        }
-        if (!line.empty()){
-            out(r,c) = stod(token);
-        }
-        r += 1;
-        c = 0;
+    for(int i = 0; i < vhop::THETA_DIM; i++) {
+        outputs[i + SHAPE_BASIS_DIM] = theta(i);
     }
-    fin.close();
-
-    if(out.rows() != row || out.cols() != col){
-        throw std::invalid_argument( "loadded weight parameter dimension does not match with the weights" );
-    }
-    return out;
+    outputs[vhop::SHAPE_BASIS_DIM + vhop::THETA_DIM] = executionTime;
+    writeVector(filePath, outputs);
 }
 
 
@@ -139,6 +103,10 @@ Eigen::Matrix<double, 3, 3> vhop::utility::rodriguesMatrix(const Eigen::Vector3d
     return R;
 }
 
+Eigen::Vector3d vhop::utility::rodriguesVector(const Eigen::Matrix3d &R) {
+    Eigen::AngleAxisd r(R);
+    return r.angle() * r.axis();
+}
 
 Eigen::Matrix<double, Eigen::Dynamic, 2> vhop::utility::project(const Eigen::Matrix<double, Eigen::Dynamic, 3>& p, const Eigen::Matrix3d& K) {
     Eigen::Matrix<double, Eigen::Dynamic, 2> p2d(p.rows(), 2);

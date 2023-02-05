@@ -3,8 +3,21 @@
 
 #include <cnpy.h>
 #include <Eigen/Dense>
+#include <filesystem>
+
+#include "vhop/constants.h"
 
 namespace vhop::utility {
+
+/**
+ * List all files in a directory recursively with a given suffix.
+ * @param directory Directory path.
+ * @param suffix file suffix, files with other suffix are omitted.
+ * @param recursive Whether to list files recursively.
+ */
+std::vector<std::filesystem::path> listFiles(const std::string& directory,
+                                             const std::string& suffix,
+                                             bool recursive = false);
 
 /**
  * @brief Load one dimension of a 3D numpy array from a npz file.
@@ -23,21 +36,28 @@ Eigen::MatrixXd loadDoubleMatrix3D(const cnpy::NpyArray &raw, int r, int c, int 
 Eigen::MatrixXd loadDoubleMatrix(const cnpy::NpyArray &raw, int r, int c);
 
 /**
- * @brief Load a double matrix from a text file.
- * @param filePath Path to the text file.
- * @param row Number of rows.
- * @param col Number of columns.
- * @return The loaded array.
+ * @brief Load a vector from a binary file.
+ * @param filePath Path to binary file.
  */
-Eigen::MatrixXd loadDoubleMatrix(const std::string& filePath, int row, int col);
+std::vector<double> loadVector(const std::string& filePath);
 
 /**
- * @brief Load a double vector from a text file.
- * @param filePath Path to the text file.
- * @param row Number of rows.
- * @return The loaded array.
+ * @brief Write a vector of doubles to a binary file.
+ * @param myVector Vector of doubles.
+ * @param filePath output filename.
  */
-Eigen::VectorXd loadVector(const std::string& filePath, int row);
+void writeVector(const std::string& filePath, const std::vector<double>& myVector);
+
+/**
+ * @brief Write SMPL parameters to a binary file.
+ * @param beta SMPL shape parameters (10,).
+ * @param theta SMPL pose parameters (72,).
+ * @param executionTime Execution time in seconds.
+ */
+void writeSMPLParameters(const std::string& filePath,
+                         const vhop::beta_t<double>& beta,
+                         const vhop::theta_t<double>& theta,
+                         const double& executionTime = -1.0);
 
 /**
  * @brief Rodrigues' formula for rotation matrix from axis-angle representation.
@@ -46,12 +66,19 @@ Eigen::VectorXd loadVector(const std::string& filePath, int row);
 Eigen::Matrix3d rodriguesMatrix(const Eigen::Vector3d& rotVec);
 
 /**
+ * @brief Convert rotation matrix to axis-angle representation.
+ * @param R Rotation matrix.
+ */
+Eigen::Vector3d rodriguesVector(const Eigen::Matrix3d& R);
+
+/**
  * @brief Pinhole camera projection using given intrinsic parameters.
  * @param p 3D points.
  * @param K Intrinsic parameters.
  * @return 2D points.
  */
-Eigen::Matrix<double, Eigen::Dynamic, 2> project(const Eigen::Matrix<double, Eigen::Dynamic, 3>& p, const Eigen::Matrix3d& K);
+Eigen::Matrix<double, Eigen::Dynamic, 2> project(const Eigen::Matrix<double, Eigen::Dynamic, 3>& p,
+                                                 const Eigen::Matrix3d& K);
 
 } // namespace vhop
 

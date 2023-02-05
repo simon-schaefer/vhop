@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "test_pipeline.h"
 #include "test_smpl_model.h"
 #include "test_vposer.h"
 #include "test_utility.h"

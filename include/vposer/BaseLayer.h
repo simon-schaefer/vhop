@@ -1,5 +1,6 @@
 #ifndef VHOP_BASELAYER_H
 #define VHOP_BASELAYER_H
+#include <cnpy.h>
 #include <Eigen/Dense>
 
 class BaseLayer {
@@ -7,7 +8,6 @@ class BaseLayer {
         virtual ~BaseLayer() = default;
         virtual Eigen::MatrixXd forward(const Eigen::MatrixXd &x) = 0;
         virtual void printDescription() = 0;
-        virtual void loadParams(std::string paramFilePath) = 0;
 };
 
 #endif //VHOP_BASELAYER_H

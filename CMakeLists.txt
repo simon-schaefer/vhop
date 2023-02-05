@@ -31,12 +31,13 @@ include_directories( SYSTEM ${OpenCV_INCLUDE_DIRS} )
 include_directories(include)
 add_library(${PROJECT_NAME}
     src/utility.cpp
+    src/smpl_model.cpp
     src/visualization.cpp
-    src/vposer/BatchNorm.cpp
-    src/vposer/LatentDist.cpp
-    src/vposer/LeakyRelu.cpp
-    src/vposer/Linear.cpp
-    src/vposer/VPoser.cpp
+    src/BatchNorm.cpp
+    src/LatentDist.cpp
+    src/LeakyRelu.cpp
+    src/Linear.cpp
+    src/VPoser.cpp
     ${CNPY_SOURCES}
 )
 target_link_libraries(${PROJECT_NAME}
@@ -46,8 +47,8 @@ target_link_libraries(${PROJECT_NAME}
    ${OpenCV_LIBRARIES}
 )
 
-add_executable(vhop_main main.cpp)
-target_link_libraries(vhop_main ${PROJECT_NAME} ${DEPENDENCIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(process_dataset apps/process_dataset.cpp)
+target_link_libraries(process_dataset ${PROJECT_NAME} ${DEPENDENCIES} ${CERES_LIBRARIES} ${OpenCV_LIBRARIES})
 
 # Testing with google tests.
 enable_testing()

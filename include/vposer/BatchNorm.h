@@ -6,14 +6,13 @@
 class BatchNorm : public BaseLayer{
 
 public:
-
-    BatchNorm(int num_features);
-
+    explicit BatchNorm(int numFeatures);
+    BatchNorm(int numFeatures, const cnpy::npz_t& raw, const std::string& name);
     ~BatchNorm() override = default;
 
-    Eigen::MatrixXd forward(const Eigen::MatrixXd &x)override ;
+    Eigen::MatrixXd forward(const Eigen::MatrixXd &x )override ;
     void printDescription() override;
-    void loadParams(std::string paramFilePath)override ;
+
 private:
     double mEps= 1e-5;
     Eigen::VectorXd mWeights;

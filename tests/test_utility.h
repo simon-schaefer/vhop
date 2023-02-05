@@ -18,7 +18,7 @@ TEST(TestUtility, TestRodriguez) {
 }
 
 TEST(TestUtility, TestLoadDoubleMatrix) {
-    cnpy::npz_t npz = cnpy::npz_load("../data/test/reading.npz");
+    cnpy::npz_t npz = cnpy::npz_load("../data/test/utility/reading.npz");
     const cnpy::NpyArray& fooMatrix = npz.at("a");
     Eigen::MatrixXd m = vhop::utility::loadDoubleMatrix(fooMatrix, 3, 2);
     Eigen::MatrixXd expectedMatrix(3, 2);
@@ -26,4 +26,14 @@ TEST(TestUtility, TestLoadDoubleMatrix) {
                       0.88884227, 0.35643352,
                       0.35795367, 0.14058801;
     EXPECT_TRUE(m.isApprox(expectedMatrix, 0.0001));
+}
+
+TEST(TestUtility, TestRodriguesVector) {
+    Eigen::Matrix3d R;
+    R << 0.5102, -0.3412,  0.7895,
+         0.4496,  0.8883,  0.0934,
+         -0.7332,  0.3073,  0.6067;
+    Eigen::Vector3d aa = vhop::utility::rodriguesVector(R);
+    Eigen::Vector3d aaExpected(0.1292, 0.9195, 0.4776);
+    EXPECT_TRUE(aa.isApprox(aaExpected, 0.001));
 }

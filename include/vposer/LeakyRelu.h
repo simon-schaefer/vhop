@@ -7,17 +7,14 @@
 class LeakyRelu : public BaseLayer {
 
     public:
-
-        LeakyRelu();
-        LeakyRelu(float alpha);
+        explicit LeakyRelu(double alpha = 0.1);
         ~LeakyRelu() override = default;
 
         Eigen::MatrixXd forward(const Eigen::MatrixXd &x) override;
         void printDescription() override;
-        void loadParams(std::string paramFilePath) override;
 
     private:
-        float mAlpha = 0.1f;
+        double mAlpha = 0.1;
         std::string mType = "Activation";
         std::string mName = "LeakyReLU";
         Eigen::MatrixXd mForwardInput;

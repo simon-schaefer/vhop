@@ -3,9 +3,15 @@
 .DS_Store
 
 # Data directory.
-data/main.png
-data/test_smpl/*.png
+data/test/**/*.png
+data/test/**/*.bin
+data/results/**/*.bin
+data/results/**/*.png
+data/zju-mocap/CoreView_*
 
 # build directory
 cmake-build-debug/
 cmake-build-release/
+
+# third party
+thirdparty/eigen-3.4.0/
