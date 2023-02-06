@@ -37,7 +37,7 @@ TEST(SMPLModelTest, TestForward) {
     theta_t<double> thetas = vhop::utility::loadDoubleMatrix(npz.at("thetas"), THETA_DIM, 1);
     joint_t<double> joints;
     vertex_t<double> vertices;
-    model.Forward(betas, thetas, &joints, &vertices);
+    model.Forward<double>(betas, thetas, &joints, &vertices);
 
     Eigen::Matrix<double, vhop::JOINT_NUM, 3> joints3d = joints.reshaped(3, vhop::JOINT_NUM).transpose();
     Eigen::MatrixXd joints3d_full_exp = vhop::utility::loadDoubleMatrix(npz.at("joints_3d_wo_translation"), vhop::JOINT_NUM_TOTAL, 3);
@@ -54,7 +54,7 @@ TEST(TestReprojectionError, TestOpenPoseReprojection) {
 
   SMPL smpl_model("../data/smpl_neutral.npz");
   joint_op_2d_t<double> joints_2d;
-  smpl_model.ComputeOpenPoseKP(beta, theta, T_C_B, K, &joints_2d);
+  smpl_model.ComputeOpenPoseKP<double>(beta, theta, T_C_B, K, &joints_2d);
 
   joint_op_2d_t<double> joints_kp = vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d"), 25, 2);
   for(int i = 0; i < 25; ++i) {

@@ -9,7 +9,7 @@
 TEST(TestUtility, TestRodriguez) {
     // conversion from https://www.andre-gaschler.com/rotationconverter/
     Eigen::Vector3d r(1.7289318, 0.0823301, 0.4939805);
-    Eigen::Matrix3d R = vhop::utility::rodriguesMatrix(r);
+    Eigen::Matrix3d R = vhop::utility::rodriguesMatrix<double>(r);
     Eigen::Matrix3d expectedRotation;
     expectedRotation << 0.9050074, -0.2133418,  0.3680312,
                         0.3211713, -0.2246347, -0.9199936,
@@ -33,7 +33,7 @@ TEST(TestUtility, TestRodriguesVector) {
     R << 0.5102, -0.3412,  0.7895,
          0.4496,  0.8883,  0.0934,
          -0.7332,  0.3073,  0.6067;
-    Eigen::Vector3d aa = vhop::utility::rodriguesVector(R);
+    Eigen::Vector3d aa = vhop::utility::rodriguesVector<double>(R);
     Eigen::Vector3d aaExpected(0.1292, 0.9195, 0.4776);
     EXPECT_TRUE(aa.isApprox(aaExpected, 0.001));
 }

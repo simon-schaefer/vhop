@@ -35,6 +35,7 @@ SMPL::SMPL(const std::string &path)
             weightsMat(v, j) = weights[v * JOINT_NUM + j];
         }
     }
+    weightsVertexJoints_.resize(JOINT_NUM_EXTRA, JOINT_NUM);
     for (int j = 0; j < JOINT_NUM_EXTRA; j++) {
         int vertex_id = VERTEX_JOINT_IDXS[j];
         weightsVertexJoints_.row(j) = weightsMat.row(vertex_id);

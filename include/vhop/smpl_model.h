@@ -29,7 +29,7 @@ class SMPL {
 
   Eigen::MatrixXd restShape_;
   Eigen::MatrixXd jointRegressor_;
-  Eigen::Matrix<double, JOINT_NUM_EXTRA, JOINT_NUM> weightsVertexJoints_;
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> weightsVertexJoints_;  // (JOINT_NUM_EXTRA, JOINT_NUM)
 
   // Hierarchy relation between joints, the root is at the belly button, (2, 24).
   std::vector<uint32_t> kinematicTree_;

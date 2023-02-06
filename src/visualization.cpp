@@ -29,7 +29,7 @@ void vhop::visualization::drawKeypoints(const std::string& image_file_name,
                                         const Eigen::Matrix<int, Eigen::Dynamic, 2>& gt_keypoints,
                                         const std::string& output_file_name) {
     cv::Mat image = cv::imread(image_file_name);
-    drawKeypoints(image, pred_keypoints, cv::Scalar(0, 0, 255));
     drawKeypoints(image, gt_keypoints, cv::Scalar(0, 255, 0));
+    drawKeypoints(image, pred_keypoints, cv::Scalar(0, 0, 255));
     cv::imwrite(output_file_name, image);
 }

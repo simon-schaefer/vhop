@@ -63,13 +63,15 @@ void writeSMPLParameters(const std::string& filePath,
  * @brief Rodrigues' formula for rotation matrix from axis-angle representation.
  * @param r anlge-axis representation of a rotation.
  */
-Eigen::Matrix3d rodriguesMatrix(const Eigen::Vector3d& rotVec);
+template<typename T>
+Eigen::Matrix<T, 3, 3> rodriguesMatrix(const Eigen::Vector<T, 3>& rotVec);
 
 /**
  * @brief Convert rotation matrix to axis-angle representation.
  * @param R Rotation matrix.
  */
-Eigen::Vector3d rodriguesVector(const Eigen::Matrix3d& R);
+template<typename T>
+Eigen::Vector<T, 3> rodriguesVector(const Eigen::Matrix<T, 3, 3>& R);
 
 /**
  * @brief Pinhole camera projection using given intrinsic parameters.
@@ -77,9 +79,12 @@ Eigen::Vector3d rodriguesVector(const Eigen::Matrix3d& R);
  * @param K Intrinsic parameters.
  * @return 2D points.
  */
-Eigen::Matrix<double, Eigen::Dynamic, 2> project(const Eigen::Matrix<double, Eigen::Dynamic, 3>& p,
-                                                 const Eigen::Matrix3d& K);
+template<typename T>
+Eigen::Matrix<T, Eigen::Dynamic, 2> project(const Eigen::Matrix<T, Eigen::Dynamic, 3>& p,
+                                            const Eigen::Matrix3d& K);
 
 } // namespace vhop
+
+#include "vhop/implementation/utility_impl.hpp"
 
 #endif //VHOP_INCLUDE_VHOP_UTILITY_IO_H_

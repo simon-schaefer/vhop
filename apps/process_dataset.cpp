@@ -25,15 +25,15 @@ int main(int argc, char** argv) {
   if (methodName == "smpl") {
     vhop::Pipeline<vhop::ReProjectionErrorSMPL<1>> pipeline(smplModel, ceresOptions);
     success = pipeline.processDirectory(directory, outputDirectory);
-  } else if (methodName == "vposer") {
-    vhop::Pipeline<vhop::ReProjectionErrorVPoser<1>> pipeline(smplModel, ceresOptions);
-    success = pipeline.processDirectory(directory, outputDirectory);
-  } else if (methodName == "smpl+2") {
-    vhop::Pipeline<vhop::ReProjectionErrorSMPL<2>> pipeline(smplModel, ceresOptions);
-    success = pipeline.processDirectory(directory, outputDirectory);
-  } else if (methodName == "vposer+2") {
-    vhop::Pipeline<vhop::ReProjectionErrorVPoser<2>> pipeline(smplModel, ceresOptions);
-    success = pipeline.processDirectory(directory, outputDirectory);
+//  } else if (methodName == "vposer") {
+//    vhop::Pipeline<vhop::ReProjectionErrorVPoser<1>> pipeline(smplModel, ceresOptions);
+//    success = pipeline.processDirectory(directory, outputDirectory);
+//  } else if (methodName == "smpl+2") {
+//    vhop::Pipeline<vhop::ReProjectionErrorSMPL<2>> pipeline(smplModel, ceresOptions);
+//    success = pipeline.processDirectory(directory, outputDirectory);
+//  } else if (methodName == "vposer+2") {
+//    vhop::Pipeline<vhop::ReProjectionErrorVPoser<2>> pipeline(smplModel, ceresOptions);
+//    success = pipeline.processDirectory(directory, outputDirectory);
   } else {
     std::cout << "Unknown method: " << methodName << std::endl;
     return 1;

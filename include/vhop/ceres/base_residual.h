@@ -17,7 +17,8 @@ public:
   // @param params The optimization parameters.
   // @param residuals The residual values to be computed and overwritten.
   // @return true if the computation was successful, false otherwise.
-  virtual bool operator()(const double *params, double *residuals) const = 0;
+  template<typename T>
+  bool operator()(const double *params, double *residuals) const { return false; };
 
   // @brief Get the initial parameters for the optimization.
   [[nodiscard]] virtual Eigen::VectorXd x0() const = 0;
@@ -46,18 +47,6 @@ public:
   [[nodiscard]] virtual bool writeSMPLParameters(const Eigen::VectorXd& z,
                                                  const std::vector<std::string>& outputPaths,
                                                  double executionTime) const = 0;
-
-  // @brief Convert the optimization parameters to SMPL parameters.
-  // @param z The optimization parameters.
-  // @param betas The SMPL shape parameters to overwrite.
-  // @param thetas The SMPL pose parameters to overwrite.
-  virtual void convert2SMPL(const Eigen::VectorXd& z,
-                            AlignedVector<beta_t<double>>& betas,
-                            AlignedVector<theta_t<double>>& thetas) const = 0;
-  // @brief Convert the optimization parameters to an Eigen vector.
-  // @param z The optimization parameters.
-  // @param z_eigen The Eigen vector.
-  virtual void convert2Eigen(const double* z, Eigen::VectorXd& z_eigen) const = 0;
 
 };
 

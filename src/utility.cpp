@@ -88,31 +88,3 @@ void vhop::utility::writeSMPLParameters(const std::string& filePath,
     writeVector(filePath, outputs);
 }
 
-
-Eigen::Matrix<double, 3, 3> vhop::utility::rodriguesMatrix(const Eigen::Vector3d &r) {
-    double theta = r.norm();
-    Eigen::Matrix<double, 3, 3> R = Eigen::Matrix<double, 3, 3>::Identity();
-    if (theta > 1e-8) {
-        Eigen::Vector3d r_normalized = r / theta;
-        Eigen::Matrix<double, 3, 3> r_cross;
-        r_cross << 0, -r_normalized(2), r_normalized(1),
-            r_normalized(2), 0, -r_normalized(0),
-            -r_normalized(1), r_normalized(0), 0;
-        R += sin(theta) * r_cross + (1 - cos(theta)) * r_cross * r_cross;
-    }
-    return R;
-}
-
-Eigen::Vector3d vhop::utility::rodriguesVector(const Eigen::Matrix3d &R) {
-    Eigen::AngleAxisd r(R);
-    return r.angle() * r.axis();
-}
-
-Eigen::Matrix<double, Eigen::Dynamic, 2> vhop::utility::project(const Eigen::Matrix<double, Eigen::Dynamic, 3>& p, const Eigen::Matrix3d& K) {
-    Eigen::Matrix<double, Eigen::Dynamic, 2> p2d(p.rows(), 2);
-    for (int i = 0; i < p.rows(); i++) {
-        p2d(i, 0) = p(i, 0) * K(0, 0) / p(i, 2) + K(0, 2);
-        p2d(i, 1) = p(i, 1) * K(1, 1) / p(i, 2) + K(1, 2);
-    }
-    return p2d;
-}

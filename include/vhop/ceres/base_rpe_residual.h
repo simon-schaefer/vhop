@@ -8,29 +8,34 @@
 #include "vhop/smpl_model.h"
 #include "vhop/visualization.h"
 #include "vhop/ceres/base_residual.h"
+#include "vposer/constants.h"
 
 namespace vhop {
 
-template<size_t N_TIME_STEPS>
+enum Method { RP_SMPL, RP_VPOSER };
+
+template<size_t N_TIME_STEPS, Method METHOD>
 class RPEResidualBase : public ResidualBase {
 
-public:
+ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  RPEResidualBase(const std::vector<std::string>& dataFilePaths, vhop::SMPL smpl_model)
-  : smpl_model_(std::move(smpl_model)) {
+  RPEResidualBase(const std::vector<std::string> &dataFilePaths, vhop::SMPL smpl_model)
+      : smpl_model_(std::move(smpl_model)) {
     static_assert(N_TIME_STEPS > 0, "N_TIME_STEPS must be greater than 0");
-    if(dataFilePaths.size() != N_TIME_STEPS) {
+    if (dataFilePaths.size() != N_TIME_STEPS) {
       std::cerr << "dataFilePaths.size() must be equal to N_TIME_STEPS" << std::endl;
       exit(-1);
     }
-
-    for(const auto& dataFilePath : dataFilePaths) {
+    for (const auto &dataFilePath: dataFilePaths) {
       cnpy::npz_t npz = cnpy::npz_load(dataFilePath);
+      beta_.emplace_back(vhop::utility::loadDoubleMatrix(npz.at("betas"), vhop::SHAPE_BASIS_DIM, 1));
       K_.emplace_back(vhop::utility::loadDoubleMatrix(npz.at("intrinsics"), 3, 3));
       T_C_B_.emplace_back(vhop::utility::loadDoubleMatrix(npz.at("T_C_B"), 4, 4));
       joint_kps_.emplace_back(vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d"), vhop::JOINT_NUM_OP, 2));
-      joint_kps_scores_.emplace_back(vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d_scores"), vhop::JOINT_NUM_OP, 1));
+      joint_kps_scores_.emplace_back(vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d_scores"),
+                                                                     vhop::JOINT_NUM_OP,
+                                                                     1));
     }
   };
 
@@ -42,13 +47,14 @@ public:
   // @param params The optimization parameters.
   // @param residuals The residual values to be computed and overwritten.
   // @return true if the computation was successful, false otherwise.
-  bool operator()(const double *params, double *re_projection_error) const override {
-    Eigen::VectorXd params_eigen;
+  template<typename T>
+  bool operator()(const T *params, T *re_projection_error) const {
+    Eigen::Vector<T, Eigen::Dynamic> params_eigen;
     convert2Eigen(params, params_eigen);
 
     // Compute the OpenPose re-projection based on the optimization parameters.
-    AlignedVector<vhop::joint_op_2d_t<double>> joints2d;
-    bool success = computeReProjection(params_eigen, joints2d);
+    AlignedVector<vhop::joint_op_2d_t<T>> joints2d;
+    bool success = computeReProjection<T>(params_eigen, joints2d);
     if (!success) {
       std::cerr << "Failed to compute re-projection from optimization parameters" << std::endl;
       return false;
@@ -58,8 +64,8 @@ public:
     for (int t = 0; t < N_TIME_STEPS; t++) {
       const size_t offset_t = t * vhop::JOINT_NUM_OP * 2;
       for (int i = 0; i < vhop::JOINT_NUM_OP; ++i) {
-        double score = RPEResidualBase<N_TIME_STEPS>::joint_kps_scores_[t](i);
-        Eigen::Vector2d joint2d_gt = RPEResidualBase<N_TIME_STEPS>::joint_kps_[t].row(i);
+        double score = RPEResidualBase<N_TIME_STEPS, METHOD>::joint_kps_scores_[t](i);
+        Eigen::Vector2d joint2d_gt = RPEResidualBase<N_TIME_STEPS, METHOD>::joint_kps_[t].row(i);
         re_projection_error[offset_t + i * 2] = score * (joints2d[t](i, 0) - joint2d_gt(0));
         re_projection_error[offset_t + i * 2 + 1] = score * (joints2d[t](i, 1) - joint2d_gt(1));
       }
@@ -68,20 +74,20 @@ public:
     // Add zero/constant motion residuals.
     const size_t offset = N_TIME_STEPS * vhop::JOINT_NUM_OP * 2;
     for (int i = 0; i < vhop::JOINT_NUM_OP; ++i) {
-      if(N_TIME_STEPS == 1) continue;
+      if (N_TIME_STEPS == 1) continue;
 
-      double score = RPEResidualBase<N_TIME_STEPS>::joint_kps_scores_[0](i);
+      double score = RPEResidualBase<N_TIME_STEPS, METHOD>::joint_kps_scores_[0](i);
       // In case of only 2 time steps, a zero motion error is applied, i.e. we the parameters are constrained
       // to be equal in the first and second time step.
       if (N_TIME_STEPS == 2) {
         re_projection_error[offset + i * 2] = score * (joints2d[0](i, 0) - joints2d[1](i, 0));
         re_projection_error[offset + i * 2 + 1] = score * (joints2d[0](i, 1) - joints2d[1](i, 1));
-      // When there are more than 2 time steps, we apply a constant motion error, i.e.
-      // p(t) = p(t-1) + v(t-1) * dt = p(t-1) + (p(t-1) - p(t-2)) = 2 * p(t-1) - p(t-2)
+        // When there are more than 2 time steps, we apply a constant motion error, i.e.
+        // p(t) = p(t-1) + v(t-1) * dt = p(t-1) + (p(t-1) - p(t-2)) = 2 * p(t-1) - p(t-2)
       } else if (N_TIME_STEPS > 2) {
-        for(int t = 2; t < N_TIME_STEPS; t++) {
-          double error_x = joints2d[t](i, 0) - (2 * joints2d[t-1](i, 0) - joints2d[t-2](i, 0));
-          double error_y = joints2d[t](i, 1) - (2 * joints2d[t-1](i, 1) - joints2d[t-2](i, 1));
+        for (int t = 2; t < N_TIME_STEPS; t++) {
+          T error_x = joints2d[t](i, 0) - (2.0 * joints2d[t - 1](i, 0) - joints2d[t - 2](i, 0));
+          T error_y = joints2d[t](i, 1) - (2.0 * joints2d[t - 1](i, 1) - joints2d[t - 2](i, 1));
           re_projection_error[offset + (t - 2) * vhop::JOINT_NUM_OP * 2 + i * 2] = score * error_x;
           re_projection_error[offset + (t - 2) * vhop::JOINT_NUM_OP * 2 + i * 2 + 1] = score * error_y;
         }
@@ -101,10 +107,10 @@ public:
   // @param outputPaths The paths to the output files.
   // @param executionTime The execution time of the optimization.
   // @return true if the computation was successful, false otherwise.
-  [[nodiscard]] bool writeSMPLParameters(const Eigen::VectorXd& z,
-                                         const std::vector<std::string>& outputPaths,
+  [[nodiscard]] bool writeSMPLParameters(const Eigen::VectorXd &z,
+                                         const std::vector<std::string> &outputPaths,
                                          double executionTime) const override {
-    if(outputPaths.size() != N_TIME_STEPS) {
+    if (outputPaths.size() != N_TIME_STEPS) {
       std::cerr << "outputPaths.size() must be equal to N_TIME_STEPS" << std::endl;
       return false;
     }
@@ -112,11 +118,11 @@ public:
     // Convert optimization parameters z to SMPL parameters.
     AlignedVector<beta_t<double>> betas;
     AlignedVector<theta_t<double>> thetas;
-    convert2SMPL(z, betas, thetas);
+    convert2SMPL<double>(z, betas, thetas);
 
     // For each time step, write the SMPL parameters to the outputPaths.
-    for(size_t t = 0; t < N_TIME_STEPS; ++t) {
-      vhop::utility::writeSMPLParameters(outputPaths[t],betas[t], thetas[t], executionTime);
+    for (size_t t = 0; t < N_TIME_STEPS; ++t) {
+      vhop::utility::writeSMPLParameters(outputPaths[t], betas[t], thetas[t], executionTime);
     }
     return true;
   }
@@ -128,10 +134,10 @@ public:
   // @param imagePath The path to the images.
   // @param outputImagePath The path to the output images.
   // @return true if the computation was successful, false otherwise.
-  [[nodiscard]] bool drawReProjections(const Eigen::VectorXd& params,
-                                       const std::vector<std::string>& imagePath,
-                                       const std::vector<std::string>& outputImagePath) const override {
-    if(imagePath.size() != N_TIME_STEPS || outputImagePath.size() != N_TIME_STEPS) {
+  [[nodiscard]] bool drawReProjections(const Eigen::VectorXd &params,
+                                       const std::vector<std::string> &imagePath,
+                                       const std::vector<std::string> &outputImagePath) const override {
+    if (imagePath.size() != N_TIME_STEPS || outputImagePath.size() != N_TIME_STEPS) {
       std::cerr << "imagePath.size() and outputImagePath.size() must be equal to N_TIME_STEPS" << std::endl;
       return false;
     }
@@ -139,19 +145,33 @@ public:
     // Convert optimization parameters z to SMPL parameters.
     AlignedVector<vhop::joint_op_2d_t<double>> joints2d;
     bool success = computeReProjection(params, joints2d);
-    if(!success) {
+    if (!success) {
       std::cerr << "Failed to compute re-projection for drawing images" << std::endl;
       return false;
     }
 
     // For each time step, draw the re-projections and save them to the outputImagePath.
-    for(size_t t = 0; t < N_TIME_STEPS; ++t) {
+    for (size_t t = 0; t < N_TIME_STEPS; ++t) {
       vhop::visualization::drawKeypoints(imagePath[t],
                                          joints2d[t].cast<int>(),
                                          joint_kps_[t].template cast<int>(),
                                          outputImagePath[t]);
     }
     return true;
+  }
+
+  // Get the initial parameters for the optimization.
+  [[nodiscard]] Eigen::VectorXd x0() const override {
+    int num_params = getNumParams();
+    return Eigen::VectorXd::Ones(num_params) * 1e-3;
+  }
+
+  static constexpr int getNumParams() {
+    switch (METHOD) {
+      case RP_SMPL: return vhop::THETA_DIM * N_TIME_STEPS;
+      case RP_VPOSER: return vposer::LATENT_DIM * N_TIME_STEPS;
+      default: return -1;
+    }
   }
 
   // N_TIME_STEPS * vhop::JOINT_NUM_OP * 2 + (N_TIME_STEPS - 2) * vhop::JOINT_NUM_OP * 2
@@ -165,30 +185,57 @@ public:
     }
     return vhop::JOINT_NUM_OP * 2 * (2 * N_TIME_STEPS - 2);
   }
-  // return the number of time steps
+
+  // Return the number of time steps
   static constexpr int getNumTimeSteps() { return N_TIME_STEPS; }
 
  protected:
-  [[nodiscard]] bool computeReProjection(const Eigen::VectorXd& params,
-                                         AlignedVector<vhop::joint_op_2d_t<double>>& joints2d) const {
+  template<typename T>
+  [[nodiscard]] bool computeReProjection(const Eigen::Vector<T, Eigen::Dynamic> &params,
+                                         AlignedVector<vhop::joint_op_2d_t<T>> &joints2d) const {
     AlignedVector<beta_t<double>> betas;
-    AlignedVector<theta_t<double>> thetas;
+    AlignedVector<theta_t<T>> thetas;
     convert2SMPL(params, betas, thetas);
 
-    joints2d = AlignedVector<vhop::joint_op_2d_t<double>>(N_TIME_STEPS);
-    for(int t = 0; t < N_TIME_STEPS; t++) {
-      smpl_model_.ComputeOpenPoseKP<double>(betas[t],
-                                            thetas[t],
-                                            T_C_B_[t],
-                                            K_[t],
-                                            &joints2d[t]);
-    }
+    joints2d = AlignedVector<vhop::joint_op_2d_t<T>>(N_TIME_STEPS);
+    for (int t = 0; t < N_TIME_STEPS; t++)
+      smpl_model_.ComputeOpenPoseKP<T>(betas[t], thetas[t], T_C_B_[t], K_[t], &joints2d[t]);
     return true;
   }
 
+  // @brief Convert the optimization parameters to SMPL parameters.
+  // @param z The optimization parameters.
+  // @param betas The SMPL shape parameters to overwrite.
+  // @param thetas The SMPL pose parameters to overwrite.
+  template<typename T>
+  void convert2SMPL(const Eigen::Vector<T, Eigen::Dynamic> &z,
+                    AlignedVector<beta_t<double>> &betas,
+                    AlignedVector<theta_t<T>> &thetas) const {
+    if (METHOD == RP_SMPL) {
+      betas.clear();
+      thetas.clear();
+      for (int t = 0; t < N_TIME_STEPS; t++) {
+        betas.emplace_back(beta_[t]);
+        thetas.emplace_back(z.segment(t * vhop::THETA_DIM, vhop::THETA_DIM));
+      }
+      return;
+    }
+    std::cerr << "Unknown method, failed to convert to SMPL" << std::endl;
+    exit(-1);
+  }
+
+  // @brief Convert the optimization parameters to an Eigen vector.
+  // @param z The optimization parameters.
+  // @param z_eigen The Eigen vector.
+  template<typename T>
+  void convert2Eigen(const T *z, Eigen::Vector<T, Eigen::Dynamic> &z_eigen) const {
+    constexpr size_t N = getNumParams();
+    z_eigen = Eigen::Map<const Eigen::Vector<T, Eigen::Dynamic>>(z, N);
+  };
 
   vhop::SMPL smpl_model_;
 
+  AlignedVector<beta_t<double>> beta_;
   AlignedVector<Eigen::Matrix3d> K_;
   AlignedVector<Eigen::Matrix4d> T_C_B_;
   AlignedVector<vhop::joint_op_2d_t<double>> joint_kps_;

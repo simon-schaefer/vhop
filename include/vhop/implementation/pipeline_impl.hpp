@@ -6,9 +6,6 @@
 
 #include "vhop/pipeline.h"
 
-#include "vhop/ceres/rpe_smpl.h"
-#include "vhop/ceres/rpe_vposer.h"
-
 
 template<typename RPEResidualClass>
 vhop::Pipeline<RPEResidualClass>::Pipeline(vhop::SMPL smpl, ceres::Solver::Options solverOptions, bool verbose)
@@ -47,7 +44,7 @@ bool vhop::Pipeline<RPEResidualClass>::process(
   auto end = std::chrono::steady_clock::now();
   auto executionTime = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
   if (verbose_) {
-    std::cout << summary.BriefReport() << std::endl;
+    std::cout << summary.FullReport() << std::endl;
     std::cout << "... optimization finished in " << executionTime <<" milliseconds" << std::endl;
   }
 
@@ -175,8 +172,8 @@ bool vhop::Pipeline<RPEResidualClass>::addReProjectionCostFunction(
   *cost = costPtr;
   constexpr int numParams = RPEResidualClass::getNumParams();
   constexpr int numResiduals = RPEResidualClass::getNumResiduals();
-  ceres::CostFunction *costFunction = new ceres::NumericDiffCostFunction<
-      RPEResidualClass, ceres::CENTRAL, numResiduals, numParams>(costPtr);
+  ceres::CostFunction *costFunction = new ceres::AutoDiffCostFunction<
+      RPEResidualClass, numResiduals, numParams>(costPtr);
 
   ceres::LossFunction *lossFunction = new ceres::CauchyLoss(1.0);
   Eigen::VectorXd x0_eigen = (*cost)->x0();
