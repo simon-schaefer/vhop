@@ -49,13 +49,13 @@ public:
     // Compute the OpenPose re-projection based on the optimization parameters.
     AlignedVector<vhop::joint_op_2d_t<double>> joints2d;
     bool success = computeReProjection(params_eigen, joints2d);
-    if(!success) {
+    if (!success) {
       std::cerr << "Failed to compute re-projection from optimization parameters" << std::endl;
       return false;
     }
 
     // For each joint and time-step, compute the (weighted) re-projection error.
-    for(int t = 0; t < N_TIME_STEPS; t++) {
+    for (int t = 0; t < N_TIME_STEPS; t++) {
       const size_t offset_t = t * vhop::JOINT_NUM_OP * 2;
       for (int i = 0; i < vhop::JOINT_NUM_OP; ++i) {
         double score = RPEResidualBase<N_TIME_STEPS>::joint_kps_scores_[t](i);
@@ -65,18 +65,27 @@ public:
       }
     }
 
-    // In case of two timestamps, add a zero motion cost, i.e. the difference between the two re-projected
-    // key-points should be zero.
+    // Add zero/constant motion residuals.
     const size_t offset = N_TIME_STEPS * vhop::JOINT_NUM_OP * 2;
-    if(N_TIME_STEPS == 2) {
-      for (int i = 0; i < vhop::JOINT_NUM_OP; ++i) {
-        double score = RPEResidualBase<N_TIME_STEPS>::joint_kps_scores_[0](i);
+    for (int i = 0; i < vhop::JOINT_NUM_OP; ++i) {
+      if(N_TIME_STEPS == 1) continue;
+
+      double score = RPEResidualBase<N_TIME_STEPS>::joint_kps_scores_[0](i);
+      // In case of only 2 time steps, a zero motion error is applied, i.e. we the parameters are constrained
+      // to be equal in the first and second time step.
+      if (N_TIME_STEPS == 2) {
         re_projection_error[offset + i * 2] = score * (joints2d[0](i, 0) - joints2d[1](i, 0));
         re_projection_error[offset + i * 2 + 1] = score * (joints2d[0](i, 1) - joints2d[1](i, 1));
+      // When there are more than 2 time steps, we apply a constant motion error, i.e.
+      // p(t) = p(t-1) + v(t-1) * dt = p(t-1) + (p(t-1) - p(t-2)) = 2 * p(t-1) - p(t-2)
+      } else if (N_TIME_STEPS > 2) {
+        for(int t = 2; t < N_TIME_STEPS; t++) {
+          double error_x = joints2d[t](i, 0) - (2 * joints2d[t-1](i, 0) - joints2d[t-2](i, 0));
+          double error_y = joints2d[t](i, 1) - (2 * joints2d[t-1](i, 1) - joints2d[t-2](i, 1));
+          re_projection_error[offset + (t - 2) * vhop::JOINT_NUM_OP * 2 + i * 2] = score * error_x;
+          re_projection_error[offset + (t - 2) * vhop::JOINT_NUM_OP * 2 + i * 2 + 1] = score * error_y;
+        }
       }
-    } else if (N_TIME_STEPS > 2) {
-      // TODO: implement for more than two timestamps
-      throw std::runtime_error("Not implemented yet");
     }
 
     return true;
@@ -145,10 +154,17 @@ public:
     return true;
   }
 
-  // N_TIME_STEPS * vhop::JOINT_NUM_OP * 2 + (N_TIME_STEPS - 1) * vhop::JOINT_NUM_OP * 2
-  // = vhop::JOINT_NUM_OP * 2 * (N_TIME_STEPS + N_TIME_STEPS - 1)
-  // = vhop::JOINT_NUM_OP * 2 * (2 * N_TIME_STEPS - 1)
-  static constexpr int getNumResiduals() { return vhop::JOINT_NUM_OP * 2 * (2 * N_TIME_STEPS - 1); }
+  // N_TIME_STEPS * vhop::JOINT_NUM_OP * 2 + (N_TIME_STEPS - 2) * vhop::JOINT_NUM_OP * 2
+  // = vhop::JOINT_NUM_OP * 2 * (N_TIME_STEPS + N_TIME_STEPS - 2)
+  // = vhop::JOINT_NUM_OP * 2 * (2 * N_TIME_STEPS - 2)
+  static constexpr int getNumResiduals() {
+    if constexpr (N_TIME_STEPS == 1) {
+      return vhop::JOINT_NUM_OP * 2;
+    } else if constexpr (N_TIME_STEPS == 2) {
+      return 2 * vhop::JOINT_NUM_OP * 2;
+    }
+    return vhop::JOINT_NUM_OP * 2 * (2 * N_TIME_STEPS - 2);
+  }
   // return the number of time steps
   static constexpr int getNumTimeSteps() { return N_TIME_STEPS; }
 
