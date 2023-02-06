@@ -9,44 +9,53 @@
 
 namespace vhop {
 
-class ReProjectionErrorSMPL : public vhop::RPEResidualBase {
+template<size_t N_TIME_STEPS>
+class ReProjectionErrorSMPL : public vhop::RPEResidualBase<N_TIME_STEPS> {
 
  public:
 
-  ReProjectionErrorSMPL(const std::string &dataFilePath, const vhop::SMPL &smpl_model, size_t offset = 0)
-      : RPEResidualBase(dataFilePath, smpl_model, offset) {
+  ReProjectionErrorSMPL(const std::vector<std::string>& dataFilePaths, const vhop::SMPL &smpl_model)
+      : RPEResidualBase<N_TIME_STEPS>(dataFilePaths, smpl_model) {
+    for(const auto& dataFilePath : dataFilePaths) {
       cnpy::npz_t npz = cnpy::npz_load(dataFilePath);
-      beta_ = vhop::utility::loadDoubleMatrix(npz.at("betas"), vhop::SHAPE_BASIS_DIM, 1);
+      beta_.emplace_back(vhop::utility::loadDoubleMatrix(npz.at("betas"), vhop::SHAPE_BASIS_DIM, 1));
+    }
   }
 
-  bool operator()(const double *poseData, double *re_projection_error) const override {
-      vhop::theta_t<double> poses(poseData + offset_);
-      vhop::joint_op_2d_t<double> joints2d;
-      smpl_model_.ComputeOpenPoseKP<double>(beta_, poses, T_C_B_, K_, &joints2d);
-
-      for (int i = 0; i < vhop::JOINT_NUM_OP; ++i) {
-          double score = joint_kps_scores_(i);
-          re_projection_error[i * 2] = score * (joints2d(i, 0) - joint_kps_(i, 0));
-          re_projection_error[i * 2 + 1] = score * (joints2d(i, 1) - joint_kps_(i, 1));
-      }
-      return true;
+  // Get the initial parameters for the optimization.
+  [[nodiscard]] Eigen::VectorXd x0() const override {
+    // cnpy::npz_t npz_means = cnpy::npz_load("../data/vposer_mean.npz");
+    int num_params = getNumParams();
+    return Eigen::VectorXd::Zero(num_params);
   }
 
-  Eigen::VectorXd x0() override {
-      // cnpy::npz_t npz_means = cnpy::npz_load("../data/vposer_mean.npz");
-      return vhop::theta_t<double>::Zero();
+  // @brief Convert the optimization parameters to SMPL parameters.
+  // @param z The optimization parameters.
+  // @param betas The SMPL shape parameters to overwrite.
+  // @param thetas The SMPL pose parameters to overwrite.
+  void convert2SMPL(const Eigen::VectorXd& z,
+                    AlignedVector<beta_t<double>>& betas,
+                    AlignedVector<theta_t<double>>& thetas) const override {
+    betas.clear();
+    thetas.clear();
+    for (size_t t = 0; t < N_TIME_STEPS; ++t) {
+      betas.emplace_back(beta_[t]);
+      thetas.emplace_back(z.segment((long)(t * vhop::THETA_DIM), vhop::THETA_DIM));
+    }
   }
 
-  void convert2SMPL(const Eigen::VectorXd& z, beta_t<double>& beta, theta_t<double>& theta) override {
-      beta = beta_;
-      theta = z;
+  // @brief Convert the optimization parameters to an Eigen vector.
+  // @param z The optimization parameters.
+  // @param z_eigen The Eigen vector.
+  void convert2Eigen(const double* z, Eigen::VectorXd& z_eigen) const override {
+    z_eigen = Eigen::Vector<double, getNumParams()>(z);
   }
 
-  static constexpr int getNumParams() { return vhop::THETA_DIM; }
-  static constexpr int getNumResiduals() { return vhop::JOINT_NUM_OP * 2; }
+  // THETA_DIM per time step, so N_TIME_STEPS * THETA_DIM
+  static constexpr int getNumParams() { return vhop::THETA_DIM * N_TIME_STEPS; }
 
  private:
-    vhop::beta_t<double> beta_;
+    AlignedVector<beta_t<double>> beta_;
 };
 
 }
