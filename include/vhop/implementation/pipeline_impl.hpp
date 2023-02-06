@@ -8,23 +8,16 @@
 
 #include "vhop/ceres/rpe_smpl.h"
 #include "vhop/ceres/rpe_vposer.h"
-#include "vhop/ceres/constant_motion.h"
 
 
-template<typename RPEResidualClass, size_t numTimeSteps>
-vhop::Pipeline<RPEResidualClass, numTimeSteps>::Pipeline(vhop::SMPL smpl,
-                                                           ceres::Solver::Options solverOptions,
-                                                           bool verbose)
+template<typename RPEResidualClass>
+vhop::Pipeline<RPEResidualClass>::Pipeline(vhop::SMPL smpl, ceres::Solver::Options solverOptions, bool verbose)
     : smpl_model_(std::move(smpl)),
       ceres_options_(std::move(solverOptions)),
-      verbose_(verbose) {
-  static_assert(std::is_base_of_v<RPEResidualBase, RPEResidualClass>,
-      "Pipeline RPEResidualClass template parameter must be derived from RPEResidualBase");
-  static_assert(numTimeSteps > 0, "Pipeline numTimeSteps template parameter must be greater than 0");
-}
+      verbose_(verbose) {}
 
-template<typename RPEResidualClass, size_t numTimeSteps>
-bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::process(
+template<typename RPEResidualClass>
+bool vhop::Pipeline<RPEResidualClass>::process(
     const std::vector<std::string> &filePaths,
     const std::vector<std::string> &outputPaths,
     const std::vector<std::string> &imagePaths) const {
@@ -37,25 +30,14 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::process(
   problemOptions.manifold_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;
   ceres::Problem problem(problemOptions);
 
-  constexpr int numParams = RPEResidualClass::getNumParams() * numTimeSteps;
+  constexpr int numParams = RPEResidualClass::getNumParams();
   auto* x0 = new double[numParams];
-  // Add re-projection error residuals for every image, i.e. once per timestamp.
-  std::vector<vhop::RPEResidualBase*> costs;
-  for(int t = 0; t < numTimeSteps; ++t) {
-     vhop::RPEResidualBase* cost;
-     const size_t offset = t * RPEResidualClass::getNumParams();
-     if(!addReProjectionCostFunction(filePaths[t], offset, &cost, x0,problem)) {
-      std::cout << "Failed to add re-projection cost function" << std::endl;
-      return false;
-    }
-    costs.push_back(cost);
-  }
-  // Add constant velocity residual if there is more than one timestamp.
-  if(numTimeSteps > 1) {
-    if(!addConstantVelocityCostFunction(x0, problem)) {
-      std::cout << "Failed to add constant velocity cost function" << std::endl;
-      return false;
-    }
+  // Add residual to the problem. For the sake of simplicity and to avoid unnecessary computations,
+  // we add the same residual for all time steps.
+  vhop::ResidualBase* cost;
+  if(!addReProjectionCostFunction(filePaths, &cost, x0,problem)) {
+    std::cout << "Failed to add re-projection cost function" << std::endl;
+    return false;
   }
 
   // Solve the optimization problem.
@@ -71,27 +53,28 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::process(
 
   // Write the results to output files and draw the re-projections (if image files are given).
   Eigen::Vector<double, numParams> x_sol(x0);
-  for(int t = 0; t < numTimeSteps; ++t) {
-    Eigen::VectorXd x_sol_t = x_sol.segment(t * numParams, numParams);
-    vhop::beta_t<double> beta;
-    vhop::theta_t<double> theta;
-    costs[t]->convert2SMPL(x_sol_t, beta, theta);
-    vhop::utility::writeSMPLParameters(outputPaths[t], beta, theta, (double)executionTime);
-    if(!imagePaths.empty()) {
-      costs[t]->drawReProjections(x_sol_t, imagePaths[t], outputPaths[t] + ".png");
+  if(!cost->writeSMPLParameters(x_sol, outputPaths, (double)executionTime)) {
+    std::cerr << "Failed to write SMPL parameters to output files" << std::endl;
+    return false;
+  }
+
+  if(!imagePaths.empty()) {
+    std::vector<std::string> outputImagePaths;
+    for(const auto& outputPath : outputPaths)
+      outputImagePaths.push_back(outputPath + ".png");
+    if(!cost->drawReProjections(x_sol, imagePaths, outputImagePaths)) {
+      std::cerr << "Failed to draw re-projections" << std::endl;
+      return false;
     }
   }
 
   // Cleaning up the residuals, as we took ownership from ceres.
-  for(auto cost : costs) {
-    delete cost;
-  }
-  costs.clear();
+  delete cost;
   return true;
 }
 
-template<typename RPEResidualClass, size_t numTimeSteps>
-bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::process(
+template<typename RPEResidualClass>
+bool vhop::Pipeline<RPEResidualClass>::process(
     const std::string &filePath,
     const std::string &outputPath,
     const std::string &imagePath) const {
@@ -104,8 +87,8 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::process(
   return process(filePaths, outputPaths, imagePaths);
 }
 
-template<typename RPEResidualClass, size_t numTimeSteps>
-bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::processDirectory(
+template<typename RPEResidualClass>
+bool vhop::Pipeline<RPEResidualClass>::processDirectory(
     const std::string &directory,
     const std::string &outputDirectory) const {
   const std::filesystem::path outputDir(outputDirectory);
@@ -123,6 +106,7 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::processDirectory(
     i++;
 
     const std::string fileName = filePath.stem().c_str();
+    const size_t numTimeSteps = RPEResidualClass::getNumTimeSteps();
     if (numTimeSteps == 1) {
       const std::string imageFilePath = (dir / (fileName + ".jpg")).c_str();
       const std::string outputFilePath = (outputDir / (fileName +".bin")).c_str();
@@ -181,50 +165,27 @@ bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::processDirectory(
   return true;
 }
 
-template<typename RPEResidualClass, size_t numTimeSteps>
-bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::addReProjectionCostFunction(
-    const std::string &filePath,
-    const size_t offset,
-    vhop::RPEResidualBase **cost,
+template<typename RPEResidualClass>
+bool vhop::Pipeline<RPEResidualClass>::addReProjectionCostFunction(
+    const std::vector<std::string>& filePaths,
+    vhop::ResidualBase **cost,
     double* x0,
     ceres::Problem &problem) const {
-  auto *costPtr = new RPEResidualClass(filePath, smpl_model_, offset);
+  auto *costPtr = new RPEResidualClass(filePaths, smpl_model_);
   *cost = costPtr;
-  constexpr int numParams = RPEResidualClass::getNumParams() * numTimeSteps;
+  constexpr int numParams = RPEResidualClass::getNumParams();
   constexpr int numResiduals = RPEResidualClass::getNumResiduals();
   ceres::CostFunction *costFunction = new ceres::NumericDiffCostFunction<
       RPEResidualClass, ceres::CENTRAL, numResiduals, numParams>(costPtr);
 
   ceres::LossFunction *lossFunction = new ceres::CauchyLoss(1.0);
   Eigen::VectorXd x0_eigen = (*cost)->x0();
-  for(int i = 0; i < RPEResidualClass::getNumParams(); i++) {
-    x0[i + offset] = x0_eigen[i];
+  for(int i = 0; i < numParams; i++) {
+    x0[i] = x0_eigen[i];
   }
   problem.AddResidualBlock(costFunction, lossFunction, x0);
   return true;
 }
 
-template<typename RPEResidualClass, size_t numTimeSteps>
-bool vhop::Pipeline<RPEResidualClass, numTimeSteps>::addConstantVelocityCostFunction(
-    double* x0,
-    ceres::Problem &problem) const {
-  if(numTimeSteps < 2)
-    throw std::runtime_error("Cannot add constant velocity cost function for less than 2 time steps");
-
-  constexpr int numParamsPerT = RPEResidualClass::getNumParams();
-  auto *cost = new vhop::ConstantMotionError<numParamsPerT, numTimeSteps>();
-
-  // Ceres requires a cost function with residuals > 0 during compile time. Therefore, we hack
-  // it by adding at least one residual, even if the function is not actually called in this case.
-  constexpr int numResiduals = std::max(vhop::ConstantMotionError<numParamsPerT, numTimeSteps>::getNumResiduals(), 1);
-  constexpr int numParams = RPEResidualClass::getNumParams() * numTimeSteps;
-  static_assert(numParams == vhop::ConstantMotionError<numParamsPerT, numTimeSteps>::getNumParams(),
-                "Non-Matching parameters of motion residual and re-projection residual blocks");
-  ceres::CostFunction *costFunction = new ceres::NumericDiffCostFunction<
-      vhop::ConstantMotionError<numParamsPerT, numTimeSteps>, ceres::CENTRAL, numResiduals, numParams>(cost);
-
-  problem.AddResidualBlock(costFunction, nullptr, x0);
-  return true;
-}
 
 #endif //VHOP_INCLUDE_VHOP_PIPELINE_IMPL_HPP_
