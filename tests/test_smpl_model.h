@@ -31,7 +31,7 @@ TEST(SMPLModelTest, TestModelLoading) {
 
 TEST(SMPLModelTest, TestForward) {
     TestSMPL model("../data/smpl_neutral.npz");
-    cnpy::npz_t npz = cnpy::npz_load("../data/test/sample.npz");
+    cnpy::npz_t npz = cnpy::npz_load("../data/test/samples/sample.npz");
 
     beta_t<double> betas = vhop::utility::loadDoubleMatrix(npz.at("betas"), SHAPE_BASIS_DIM, 1);
     theta_t<double> thetas = vhop::utility::loadDoubleMatrix(npz.at("thetas"), THETA_DIM, 1);
@@ -46,7 +46,7 @@ TEST(SMPLModelTest, TestForward) {
 }
 
 TEST(TestReprojectionError, TestOpenPoseReprojection) {
-  cnpy::npz_t npz = cnpy::npz_load("../data/test/sample.npz");
+  cnpy::npz_t npz = cnpy::npz_load("../data/test/samples/sample.npz");
   beta_t<double> beta = vhop::utility::loadDoubleMatrix(npz.at("betas"), vhop::SHAPE_BASIS_DIM, 1);
   theta_t<double> theta = vhop::utility::loadDoubleMatrix(npz.at("thetas"), vhop::JOINT_NUM * 3, 1);
   Eigen::Matrix3d K = vhop::utility::loadDoubleMatrix(npz.at("intrinsics"), 3, 3);
@@ -59,7 +59,7 @@ TEST(TestReprojectionError, TestOpenPoseReprojection) {
   joint_op_2d_t<double> joints_kp = vhop::utility::loadDoubleMatrix(npz.at("keypoints_2d"), 25, 2);
   for(int i = 0; i < 25; ++i) {
     std::string outputFile = "../data/test/smpl/sample_reprojected_" + std::to_string(i) + ".png";
-    vhop::visualization::drawKeypoints("../data/test/sample.jpg",
+    vhop::visualization::drawKeypoints("../data/test/samples/sample.jpg",
                                      joints_2d.block<1, 2>(i, 0).cast<int>(),
                                      joints_kp.block<1, 2>(i, 0).cast<int>(),
                                      outputFile);
