@@ -161,7 +161,7 @@ public:
     if constexpr (N_TIME_STEPS == 1) {
       return vhop::JOINT_NUM_OP * 2;
     } else if constexpr (N_TIME_STEPS == 2) {
-      return 2 * vhop::JOINT_NUM_OP * 2;
+      return 3 * vhop::JOINT_NUM_OP * 2;
     }
     return vhop::JOINT_NUM_OP * 2 * (2 * N_TIME_STEPS - 2);
   }
