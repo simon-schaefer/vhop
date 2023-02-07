@@ -14,11 +14,13 @@ public:
 
     [[nodiscard]] bool process(const std::vector<std::string> &filePaths,
                                const std::vector<std::string> &outputPaths,
-                               const std::vector<std::string> &imagePaths = std::vector<std::string>()) const;
+                               const std::vector<std::string> &imagePaths = std::vector<std::string>(),
+                               bool forceReCompute = false) const;
 
     [[nodiscard]] bool process(const std::string &filePath,
                                const std::string &outputPath,
-                               const std::string &imagePath = "") const;
+                               const std::string &imagePath = "",
+                               bool forceReCompute = false) const;
 
     [[nodiscard]] bool processDirectory(const std::string &directory,
                                         const std::string &outputDirectory) const;

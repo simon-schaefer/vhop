@@ -20,9 +20,23 @@ template<typename RPEResidualClass>
 bool vhop::Pipeline<RPEResidualClass>::process(
     const std::vector<std::string> &filePaths,
     const std::vector<std::string> &outputPaths,
-    const std::vector<std::string> &imagePaths) const {
+    const std::vector<std::string> &imagePaths,
+    bool forceReCompute) const {
   assert(filePath.size() == outputPath.size());
   assert(imagePath.size() == 0 || imagePath.size() == filePath.size());
+
+  // Check if all the output paths already exist. If so, do not compute them again.
+  bool allOutputsExist = true;
+  for(const auto& outputPath : outputPaths) {
+    if(!std::filesystem::exists(outputPath)) {
+      allOutputsExist = false;
+      break;
+    }
+  }
+  if(allOutputsExist && !forceReCompute) {
+    std::cout << "All outputs already exist. Skipping." << std::endl;
+    return true;
+  }
 
   ceres::Problem::Options problemOptions;
   problemOptions.cost_function_ownership = ceres::DO_NOT_TAKE_OWNERSHIP;
@@ -77,14 +91,15 @@ template<typename RPEResidualClass>
 bool vhop::Pipeline<RPEResidualClass>::process(
     const std::string &filePath,
     const std::string &outputPath,
-    const std::string &imagePath) const {
+    const std::string &imagePath,
+    bool forceReCompute) const {
   std::vector<std::string> filePaths = {filePath};
   std::vector<std::string> outputPaths = {outputPath};
   std::vector<std::string> imagePaths;
   if(!imagePath.empty()) {
     imagePaths.push_back(imagePath);
   }
-  return process(filePaths, outputPaths, imagePaths);
+  return process(filePaths, outputPaths, imagePaths, forceReCompute);
 }
 
 template<typename RPEResidualClass>

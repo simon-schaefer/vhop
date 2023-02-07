@@ -13,7 +13,10 @@ TEST(TestPipeline, TestSingleImageSMPL) {
     const std::string dataFilePath = "../data/test/samples/sample.npz";
     const std::string outputFilePath = "../data/test/sample_output_smpl.bin";
     const std::string imageFilePath = "../data/test/samples/sample.jpg";
-    bool success = pipeline.process(dataFilePath, outputFilePath, imageFilePath);
+    bool success = pipeline.process(dataFilePath,
+                                    outputFilePath,
+                                    imageFilePath,
+                                    true);
     assert(success);
 }
 
@@ -26,7 +29,10 @@ TEST(TestPipeline, TestSingleImageVPoser) {
   const std::string dataFilePath = "../data/test/samples/sample.npz";
   const std::string outputFilePath = "../data/test/sample_output_vposer.bin";
   const std::string imageFilePath = "../data/test/samples/sample.jpg";
-  bool success = pipeline.process(dataFilePath, outputFilePath, imageFilePath);
+  bool success = pipeline.process(dataFilePath,
+                                  outputFilePath,
+                                  imageFilePath,
+                                  true);
   assert(success);
 }
 
@@ -44,7 +50,10 @@ TEST(TestPipeline, TestTwoImages) {
                                               "../data/test/sample_output_22.bin"};
   std::vector<std::string> imageFilePaths = {"../data/test/samples/sample_31.jpg",
                                              "../data/test/samples/sample_32.jpg"};
-  bool success = pipeline.process(dataFilePaths, outputFilePaths, imageFilePaths);
+  bool success = pipeline.process(dataFilePaths,
+                                  outputFilePaths,
+                                  imageFilePaths,
+                                  true);
   assert(success);
 }
 
@@ -64,6 +73,9 @@ TEST(TestPipeline, TestThreeImages) {
   std::vector<std::string> imageFilePaths = {"../data/test/samples/sample_31.jpg",
                                              "../data/test/samples/sample_32.jpg",
                                              "../data/test/samples/sample_33.jpg"};
-  bool success = pipeline.process(dataFilePaths, outputFilePaths, imageFilePaths);
+  bool success = pipeline.process(dataFilePaths,
+                                  outputFilePaths,
+                                  imageFilePaths,
+                                  true);
   assert(success);
 }
