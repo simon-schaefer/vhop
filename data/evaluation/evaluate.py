@@ -40,11 +40,13 @@ def evaluate_sequence(data_file: pathlib.Path, smpl_model: smplx.SMPL):
 
     joints_gt, vertices_gt = compute_smpl_vertices(smpl_model, data["betas_gt"], data["thetas_gt"], data["T_gt"])
     joints_hat, vertices_hat = compute_smpl_vertices(smpl_model, data["betas"], data["thetas"], data["T"])
+    # Acceleration from VIBE (https://github.com/mkocabas/VIBE/blob/c0c3f77d587351c806e901221a9dc05d1ffade4b/lib/utils/eval_utils.py)
+    velocities = joints_hat[1:] - joints_hat[:-1]
+    acceleration = velocities[1:] - velocities[:-1]
     execution_time = data["execution_time"]
 
     eval_dicts = []
-    import pdb; pdb.set_trace()
-    for i in range(num_frames):
+    for i in range(1, num_frames - 1):
         eval_dict = {
             "camera": camera,
             "sequence": sequence,
@@ -53,6 +55,7 @@ def evaluate_sequence(data_file: pathlib.Path, smpl_model: smplx.SMPL):
             "execution_time": execution_time[i],
             "mpjpe": np.linalg.norm(joints_gt[i] - joints_hat[i], axis=-1).mean(),
             "mve": np.linalg.norm(vertices_gt[i] - vertices_hat[i], axis=-1).mean(),
+            "acceleration": np.linalg.norm(acceleration[i - 1], axis=-1).mean(),
         }
         eval_dicts.append(eval_dict)
     return eval_dicts

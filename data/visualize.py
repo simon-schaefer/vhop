@@ -6,6 +6,7 @@ import matplotlib.cm as cm
 import numpy as np
 import pathlib
 import smplx
+import trimesh
 
 from evaluation.evaluate import compute_smpl_vertices
 
@@ -23,12 +24,14 @@ def main():
     smpl_model = smplx.SMPL(args.smpl_model_file)
 
     num_frames = data["betas"].shape[0]
-    normalize = mcolors.Normalize(vmin=0, vmax=6890)
-    s_map = cm.ScalarMappable(norm=normalize, cmap=cm.jet)
-    vertex_colors = s_map.to_rgba(np.arange(6890))[..., :3]
+    normalize = mcolors.Normalize(vmin=0, vmax=6890 // 2)
+    s_map = cm.ScalarMappable(norm=normalize, cmap=cm.viridis)
+    v_idx = np.concatenate([np.arange(3445), np.arange(3445)])
+    vertex_colors = s_map.to_rgba(v_idx)[..., :3]
 
     for i in range(num_frames):
-        scene = balanna.trimesh.show_axis(np.eye(4))  # camera frame
+        # scene = balanna.trimesh.show_axis(np.eye(4))  # camera frame
+        scene = trimesh.Scene()
 
         image = cv2.imread(data["image_files"][i])
         width = int(image.shape[1] / 2)

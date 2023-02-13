@@ -47,14 +47,14 @@ def load_sequence(directory: pathlib.Path):
     execution_time = np.zeros(num_files)
 
     image_files = []
-    for i, data_file in enumerate(files):
-        method = data_file.relative_to("results").parts[0]
+    for i, results_file in enumerate(files):
+        method = results_file.relative_to("results").parts[0]
         method_dir = pathlib.Path("results") / method
-        data_file = (pathlib.Path("zju-mocap") / data_file.relative_to(method_dir)).with_suffix(".npz")
+        data_file = (pathlib.Path("zju-mocap") / results_file.relative_to(method_dir)).with_suffix(".npz")
         data = np.load(data_file.as_posix(), allow_pickle=True)
 
         if data_file.exists():
-            data_hat = np.fromfile(data_file)
+            data_hat = np.fromfile(results_file)
         else:
             data_hat = None
 
@@ -80,7 +80,7 @@ def load_sequence(directory: pathlib.Path):
         T[i] = data["T_C_B"]
 
         # Get image files from data files.
-        image_files.append(data_file.with_suffix(".jpg"))
+        image_files.append(data_file.with_suffix(".jpg").as_posix())
 
     # Assume that the number of ground truth frames is the same as the number of frames with predictions.
     assert betas_gt.shape == betas.shape
@@ -121,8 +121,6 @@ def main():
         image_files, (betas_gt, thetas_gt, T_gt), (betas, thetas, T, certainties, execution_time) = load_sequence(sequence_dir)
         thetas_smooth = kalman_filtering(thetas, certainties)
 
-        output_file = pathlib.Path("evaluation") / "post_processed" / (method + ".raw." + sequence_name + ".npz")
-        output_file.parent.mkdir(parents=True, exist_ok=True)
         store_dict = dict(
             image_files=image_files,
             betas_gt=betas_gt,
@@ -133,7 +131,9 @@ def main():
             certainties=certainties,
             execution_time=execution_time,
         )
-        np.savez(output_file, thetas=thetas, **store_dict)
+        output_file = pathlib.Path("evaluation") / "post_processed" / (method + ".raw." + sequence_name + ".npz")
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        np.savez(output_file.as_posix(), thetas=thetas, **store_dict)
         output_file = pathlib.Path("evaluation") / "post_processed" / (method + ".smoothed." + sequence_name + ".npz")
         np.savez(output_file.as_posix(), thetas=thetas_smooth, **store_dict)
 
