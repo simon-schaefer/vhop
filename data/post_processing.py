@@ -70,8 +70,10 @@ def load_sequence(directory: pathlib.Path):
 
             # Remap OpenPose uncertainties to SMPL parameters
             certainties_op = data["keypoints_2d_scores"][CMU_TO_SMPL]
+            certainties_i = np.zeros((24, 3))
             for j in range(24):
-                certainties[i, 3*j:3*(j+1)] = max(certainties_op[j], 1e-6)
+                certainties_i[j, :] = max(certainties_op[j], 1e-6)
+            certainties[i] = certainties_i.flatten()
         else:
             betas[i] = data["betas"]
             thetas[i] = np.nan
@@ -100,12 +102,13 @@ def kalman_filtering(thetas, certainties):
         thetas[np.isnan(thetas)] = np.interp(x, xp, fp)
 
     # Kalman filtering.
+    z_cov = np.stack([np.diag(1.0 / certainties[i]) for i in range(len(certainties))], axis=0)
     kf = KalmanFilter(transition_matrices=np.eye(72),
                       observation_matrices=np.eye(72),
-                      observation_covariance=[np.diag(1.0 / certainties[i]) for i in range(len(certainties))],
+                      observation_covariance=z_cov,
                       initial_state_mean=thetas[0],
                       initial_state_covariance=np.eye(72),
-                      em_vars=['transition_covariance', 'initial_state_covariance'])
+                      transition_covariance=np.eye(72) * 0.05)
     thetas_smoothed, _ = kf.smooth(thetas)
     return thetas_smoothed
 
