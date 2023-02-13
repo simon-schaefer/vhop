@@ -1,6 +1,7 @@
 # IDE
 .idea/
 .DS_Store
+*/.ipynb_checkpoints
 
 # Data directory.
 data/test/**/*.png
