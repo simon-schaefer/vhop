@@ -9,8 +9,10 @@ data/test/**/*.bin
 data/results/**/*.bin
 data/results/**/*.png
 data/zju-mocap/CoreView_*
+data/evaluation/post_processed/*.npz
 
 # build directory
+build/
 cmake-build-debug/
 cmake-build-release/
 
