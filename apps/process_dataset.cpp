@@ -19,6 +19,7 @@ int main(int argc, char** argv) {
   vhop::SMPL smplModel(smplPath);
   ceres::Solver::Options ceresOptions;
   ceresOptions.max_num_iterations = 60;
+  ceresOptions.num_threads = 4;
   ceresOptions.minimizer_progress_to_stdout = false;
 
   bool success;
@@ -33,6 +34,12 @@ int main(int argc, char** argv) {
     success = pipeline.processDirectory(directory, outputDirectory);
   } else if (methodName == "vposer+2") {
     vhop::Pipeline<vhop::ReProjectionErrorVPoser<2>> pipeline(smplModel, ceresOptions);
+    success = pipeline.processDirectory(directory, outputDirectory);
+  } else if (methodName == "smpl+3") {
+    vhop::Pipeline<vhop::ReProjectionErrorSMPL<3>> pipeline(smplModel, ceresOptions);
+    success = pipeline.processDirectory(directory, outputDirectory);
+  } else if (methodName == "vposer+3") {
+    vhop::Pipeline<vhop::ReProjectionErrorVPoser<3>> pipeline(smplModel, ceresOptions);
     success = pipeline.processDirectory(directory, outputDirectory);
   } else {
     std::cout << "Unknown method: " << methodName << std::endl;
